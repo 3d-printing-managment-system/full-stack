@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Printer {
+  id              String           @id @default(uuid())
+  name            String
+  model           String
+  status          PrinterStatus
+  ipAddress       String
+  nozzleDiameter  Float
+  bedTemp         Float
+  nozzleTemp      Float
+  cameraLink      String
+  printerType     String
+  createdAt       DateTime         @default(now())
+  commandLogs     CommandLog[]
+  maintenanceLogs MaintenanceLog[]
+  jobs            PrintJob[]
+  printerEvents   PrinterEvent[]
+  tags            PrinterTag[]
+}
+
+model Tag {
+  id       String       @id @default(uuid())
+  name     String
+  color    String?
+  printers PrinterTag[]
+}
+
+model PrinterTag {
+  printerId String
+  tagId     String
+  printer   Printer @relation(fields: [printerId], references: [id])
+  tag       Tag     @relation(fields: [tagId], references: [id])
+
+  @@id([printerId, tagId])
+}
+
+model CommandLog {
+  id           String        @id @default(uuid())
+  printerId    String
+  commandId    String?
+  response     String?
+  status       CommandStatus
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime?      @updatedAt
+  rawCommand   String
+  gcodeCommand GcodeCommand? @relation(fields: [commandId], references: [id])
+  printer      Printer       @relation(fields: [printerId], references: [id])
+}
+
+model GcodeCommand {
+  id          String       @id @default(uuid())
+  name        String
+  command     String
+  commandLogs CommandLog[]
+}
+
+model MaintenanceLog {
+  id          String          @id @default(uuid())
+  printerId   String
+  type        MaintenanceType
+  description String
+  cost        Float?
+  createdAt   DateTime        @default(now())
+  printer     Printer         @relation(fields: [printerId], references: [id])
+}
+
+model PrintJob {
+  id                   String               @id @default(uuid())
+  printerId            String?
+  fileId               String
+  status               JobStatus
+  progress             Int
+  startedAt            DateTime?
+  finishedAt           DateTime?
+  estimatedTime        Int?
+  createdAt            DateTime             @default(now())
+  printerSelectionMode PrinterSelectionMode
+  profileId            String?
+  queuePosition        Int
+  requiredTagIds       String[]
+  retryCount           Int                  @default(0)
+  part                 Part                 @relation(fields: [fileId], references: [id])
+  printer              Printer?             @relation(fields: [printerId], references: [id])
+  profile              FilamentProfile?     @relation(fields: [profileId], references: [id])
+}
+
+model Part {
+  id             String     @id @default(uuid())
+  image          String
+  title          String
+  duration       Int
+  nozzleDiameter Float
+  filamentUsed   Float
+  createdAt      DateTime   @default(now())
+  fileUrl        String?
+  printJobs      PrintJob[]
+}
+
+model FilamentProfile {
+  id        String       @id @default(uuid())
+  material  MaterialType
+  name      String
+  color     String
+  roleSize  Float
+  inventory Inventory[]
+  printJob  PrintJob[]
+}
+
+model Inventory {
+  id          String          @id @default(uuid())
+  orderNumber String
+  updateType  InventoryType
+  quantity    Int
+  totalCost   Float?
+  date        DateTime
+  profileId   String
+  profile     FilamentProfile @relation(fields: [profileId], references: [id])
+}
+
+model PrinterEvent {
+  id        String   @id @default(uuid())
+  printerId String
+  jobId     String?
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+  printer   Printer  @relation(fields: [printerId], references: [id])
+}
+
+enum PrinterStatus {
+  IDLE
+  PRINTING
+  PAUSED
+  OFFLINE
+  RESERVED
+}
+
+enum CommandStatus {
+  SENT
+  SUCCESS
+  ERROR
+}
+
+enum JobStatus {
+  QUEUED
+  PRINTING
+  PAUSED
+  DONE
+  FAILED
+  CANCELLED
+  DISPATCHED
+}
+
+enum MaintenanceType {
+  REPAIR
+  ROUTINE
+  UPGRADE
+}
+
+enum InventoryType {
+  ORDER
+  REDUCTION
+}
+
+enum MaterialType {
+  PLA
+  PLA_PLUS
+  ABS
+  PETG
+  TPU
+  ASA
+}
+
+enum PrinterSelectionMode {
+  NEXT_AVAILABLE_WITH_SPECIFIC_TAG
+  SPECIFIC_PRINTER
+}
