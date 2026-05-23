@@ -54,6 +54,7 @@ interface ProfilesContextType {
   refreshJobs: () => Promise<void>;
   refreshPrinters: () => Promise<void>;
   refreshCommands: () => Promise<void>;
+  refreshTags: () => Promise<void>;
   handleCancelJob: (jobId: string) => Promise<void>;
   handleResumeJob: (jobId: string) => Promise<void>;
   handlePauseJob: (jobId: string) => Promise<void>;
@@ -263,6 +264,15 @@ export const ProfilesProvider: React.FC<{ children: React.ReactNode }> = ({
     fetchTags();
   }, []);
 
+  const refreshTags = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/api/tags");
+      setExistingTags(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const [printers, setPrinters] = useState<Printer[]>([]);
 
   // const fetchPrinters = async () => {
@@ -375,6 +385,7 @@ export const ProfilesProvider: React.FC<{ children: React.ReactNode }> = ({
         addTag,
         updateTag,
         deleteTag,
+        refreshTags,
         refreshInventory,
         refreshProfiles,
         refreshJobs,
