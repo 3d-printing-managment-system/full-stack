@@ -169,7 +169,7 @@ const assignJobToPrinter = async (job: any, printer: any) => {
 
   // ======================================================
   // EVENT LOGGING
-  // ======================================================
+  // ====================================================== 
 
   await prisma.printerEvent.create({
     data: {

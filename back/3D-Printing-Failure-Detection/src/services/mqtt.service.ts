@@ -82,7 +82,10 @@ export const publishPauseJobCommand = ({
 }) => {
   client.publish(
     `printers/${printerId}/pause-job`,
-    JSON.stringify({ jobId }),
+    JSON.stringify({
+      printerId,
+      jobId,
+    }),
     { qos: 1 }
   );
 
@@ -98,7 +101,10 @@ export const publishResumeJobCommand = ({
 }) => {
   client.publish(
     `printers/${printerId}/resume-job`,
-    JSON.stringify({ jobId }),
+    JSON.stringify({
+      printerId,
+      jobId,
+    }),
     { qos: 1 }
   );
 
@@ -114,7 +120,10 @@ export const publishCancelJobCommand = ({
 }) => {
   client.publish(
     `printers/${printerId}/cancel-job`,
-    JSON.stringify({ jobId }),
+    JSON.stringify({
+      printerId,
+      jobId,
+    }),
     { qos: 1 }
   );
 

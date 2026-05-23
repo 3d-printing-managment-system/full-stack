@@ -95,13 +95,13 @@ client.on("message", async (topic, message) => {
     // ======================================================
     if (topic.includes("/jobs/job-state")) {
       const statusMap: any = {
-        queued: "QUEUED",
-        printing: "PRINTING",
-        paused: "PAUSED",
-        done: "DONE",
-        failed: "FAILED",
-        canceled: "CANCELLED",
-        dispatched: "DISPATCHED",
+        QUEUED: "QUEUED",
+        PRINTING: "PRINTING",
+        PAUSED: "PAUSED",
+        DONE: "DONE",
+        FAILED: "FAILED",
+        CANCELLED: "CANCELLED",
+        DISPATCHED: "DISPATCHED",
       };
 
       const mappedStatus = statusMap[data.status] ?? "QUEUED";
