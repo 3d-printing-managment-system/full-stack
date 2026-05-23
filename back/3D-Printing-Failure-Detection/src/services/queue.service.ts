@@ -23,9 +23,7 @@ export const processQueue = async () => {
     },
   });
 
-  const idlePrinters = printers.filter(
-    (printer) => printer.status === "IDLE"
-  );
+  const idlePrinters = printers.filter((printer) => printer.status === "IDLE");
 
   if (idlePrinters.length === 0) {
     return "No idle printers available";
@@ -56,13 +54,11 @@ export const processQueue = async () => {
   // ======================================================
 
   const specificPrinterJobs = jobs.filter(
-    (job) => job.printerSelectionMode === "SPECIFIC_PRINTER"
+    (job) => job.printerSelectionMode === "SPECIFIC_PRINTER",
   );
 
   const tagBasedJobs = jobs.filter(
-    (job) =>
-      job.printerSelectionMode ===
-      "NEXT_AVAILABLE_WITH_SPECIFIC_TAG"
+    (job) => job.printerSelectionMode === "NEXT_AVAILABLE_WITH_SPECIFIC_TAG",
   );
 
   // ======================================================
@@ -70,10 +66,7 @@ export const processQueue = async () => {
   // HANDLE SPECIFIC PRINTER JOBS FIRST
   // ======================================================
 
-  await handleSpecificPrinterJobs(
-    specificPrinterJobs,
-    idlePrinters
-  );
+  await handleSpecificPrinterJobs(specificPrinterJobs, idlePrinters);
 
   // ======================================================
   // REFRESH PRINTER STATES
@@ -86,7 +79,7 @@ export const processQueue = async () => {
   });
 
   const refreshedIdlePrinters = refreshedPrinters.filter(
-    (printer) => printer.status === "IDLE"
+    (printer) => printer.status === "IDLE",
   );
 
   // ======================================================
@@ -94,10 +87,7 @@ export const processQueue = async () => {
   // HANDLE TAG BASED JOBS
   // ======================================================
 
-  await handleTagBasedJobs(
-    tagBasedJobs,
-    refreshedIdlePrinters
-  );
+  await handleTagBasedJobs(tagBasedJobs, refreshedIdlePrinters);
 
   return "Queue processed successfully";
 };
@@ -108,10 +98,7 @@ export const processQueue = async () => {
  * =========================================================
  */
 
-const handleSpecificPrinterJobs = async (
-  jobs: any[],
-  idlePrinters: any[]
-) => {
+const handleSpecificPrinterJobs = async (jobs: any[], idlePrinters: any[]) => {
   for (const job of jobs) {
     if (idlePrinters.length === 0) {
       return;
@@ -123,7 +110,7 @@ const handleSpecificPrinterJobs = async (
 
     // find the exact requested printer
     const printer = idlePrinters.find(
-      (printer) => printer.id === job.printerId
+      (printer) => printer.id === job.printerId,
     );
 
     // printer not idle/available
@@ -135,9 +122,7 @@ const handleSpecificPrinterJobs = async (
     await assignJobToPrinter(job, printer);
 
     // remove printer from local idle list
-    const index = idlePrinters.findIndex(
-      (p) => p.id === printer.id
-    );
+    const index = idlePrinters.findIndex((p) => p.id === printer.id);
 
     if (index !== -1) {
       idlePrinters.splice(index, 1);
@@ -151,10 +136,7 @@ const handleSpecificPrinterJobs = async (
  * =========================================================
  */
 
-const handleTagBasedJobs = async (
-  jobs: any[],
-  idlePrinters: any[]
-) => {
+const handleTagBasedJobs = async (jobs: any[], idlePrinters: any[]) => {
   for (const job of jobs) {
     if (idlePrinters.length === 0) {
       return;
@@ -164,9 +146,7 @@ const handleTagBasedJobs = async (
 
     // find first printer containing one of the tags
     const printer = idlePrinters.find((printer) =>
-      printer.tags.some((tag: any) =>
-        requiredTags.includes(tag.tagId)
-      )
+      printer.tags.some((tag: any) => requiredTags.includes(tag.tagId)),
     );
 
     // no compatible printer available
@@ -178,9 +158,7 @@ const handleTagBasedJobs = async (
     await assignJobToPrinter(job, printer);
 
     // remove printer from local idle list
-    const index = idlePrinters.findIndex(
-      (p) => p.id === printer.id
-    );
+    const index = idlePrinters.findIndex((p) => p.id === printer.id);
 
     if (index !== -1) {
       idlePrinters.splice(index, 1);
@@ -200,10 +178,7 @@ const handleTagBasedJobs = async (
  * =========================================================
  */
 
-const assignJobToPrinter = async (
-  job: any,
-  printer: any
-) => {
+const assignJobToPrinter = async (job: any, printer: any) => {
   // ======================================================
   // DB TRANSACTION
   // prevents race conditions
@@ -234,11 +209,11 @@ const assignJobToPrinter = async (
   // MQTT DISPATCH
   // ======================================================
 
- await publishStartJob({
-  printerId: printer.id,
-  jobId: job.id,
-  fileUrl: job.part.fileUrl!,
-});
+  await publishStartJob({
+    printerId: printer.id,
+    jobId: job.id,
+    fileUrl: job.part.fileUrl!,
+  });
 
   // ======================================================
   // EVENT LOGGING

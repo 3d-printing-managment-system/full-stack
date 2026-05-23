@@ -1,8 +1,24 @@
 import { Router } from "express";
 import * as ctrl from "../controllers/part.controller";
+import multer from "multer";
+import fs from "fs";
 
 const router = Router();
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = "uploads/files";
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+const upload = multer({ storage });
+
+router.post("/upload-file", upload.single("file"), ctrl.uploadFile);
 router.post("/", ctrl.create);
 router.get("/", ctrl.getAll);
 router.delete("/", ctrl.deleteMany);

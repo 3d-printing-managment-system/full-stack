@@ -20,6 +20,7 @@ function FileAdditionPage() {
           fileName: file.name,
           fileInfo: info,
           imageURL: "/uploads/previews/img1.jpg",
+          gcodeFile: file,
         },
       });
     };

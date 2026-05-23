@@ -5,7 +5,7 @@ import { ThePreviewCard } from "./ThepreviewCard";
 
 function FilePreview() {
   const location = useLocation();
-  const { fileName, fileInfo, imageURL } = location.state as {
+  const { fileName, fileInfo, imageURL, gcodeFile } = location.state as {
     fileName: String;
     fileInfo: GCodeInfo;
     imageURL: string;
@@ -23,6 +23,7 @@ function FilePreview() {
         name={fileName}
         image={imageURL}
         onSubmit={handleAddPrint}
+        file={gcodeFile}
       />
     </div>
   );

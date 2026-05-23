@@ -6,6 +6,7 @@ interface CreatePartInput {
   duration: number;
   nozzleDiameter: number;
   filamentUsed: number;
+  fileUrl?: string;
 }
 
 interface UpdatePartInput {
@@ -14,6 +15,7 @@ interface UpdatePartInput {
   duration?: number;
   nozzleDiameter?: number;
   filamentUsed?: number;
+  fileUrl?: string;
 }
 
 export const createPart = (data: CreatePartInput) => {
