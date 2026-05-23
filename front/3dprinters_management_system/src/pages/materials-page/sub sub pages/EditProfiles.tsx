@@ -7,6 +7,7 @@ export default function EditProfilePage() {
   const { profiles } = useProfiles();
 
   const profile = profiles.find((p) => p.id === id);
+  console.log("here is the profile", profile);
 
   if (!profile) return <div>Profile not found</div>;
 

@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import app from "./app";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./swagger";
@@ -6,7 +8,6 @@ import cors from "cors";
 import "./src/services/mqtt.listener"; // Start MQTT listener on server startup
 
 const PORT = process.env.PORT || 3000;
-
 // 👇 PUT IT HERE (after app is created, before routes)
 app.use("/uploads", express.static("uploads"));
 app.use(

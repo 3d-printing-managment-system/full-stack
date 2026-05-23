@@ -14,7 +14,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { formatToDMY, getProfileCostPerKgReduction, transformInventoryToAdjustments } from "@/lib/utils";
+import {
+  formatToDMY,
+  getProfileCostPerKgReduction,
+  transformInventoryToAdjustments,
+} from "@/lib/utils";
 import { Adjustment } from "@/lib/types";
 import { DeleteButton } from "@/components/DeleteButton";
 import { useState } from "react";
@@ -26,7 +30,7 @@ function InventoryAdjustmentsPage() {
   // console.log(inventory);
 
   // joining between profiles and inventory
- const invData = transformInventoryToAdjustments(inventory, profiles);
+  const invData = transformInventoryToAdjustments(inventory, profiles);
 
   const columns: ColumnDef<Adjustment>[] = [
     // select field
@@ -219,6 +223,7 @@ function InventoryAdjustmentsPage() {
           <DeleteButton onDelete={handleDelete}>
             <Button
               className=""
+              disabled={Object.keys(rowSelection).length === 0}
               variant={
                 Object.keys(rowSelection).length === 0
                   ? "inactive"

@@ -1,24 +1,49 @@
 import { Router } from "express";
 import * as ctrl from "../controllers/part.controller";
 import multer from "multer";
-import fs from "fs";
+import { uploadToCloudinary } from "../../lib/cloudinary";
 
 const router = Router();
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = "uploads/files";
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
+const upload = multer({ storage: multer.memoryStorage() });
+
+// router.post("/upload-file", upload.single("file"), async (req, res) => {
+//   try {
+//     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+//     const result = await uploadToDrive(
+//       req.file,
+//       process.env.GOOGLE_DRIVE_FOLDER_ID!,
+//     );
+
+//     res.json({ fileUrl: result.fileUrl, downloadUrl: result.downloadUrl });
+//   } catch (error) {
+//     console.error("Drive upload error:", error);
+//     res.status(500).json({ error: "Failed to upload to Google Drive" });
+//   }
+// });
+
+router.post("/upload-file", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+    console.log(
+      "File received:",
+      req.file.originalname,
+      req.file.mimetype,
+      req.file.size,
+    ); // 👈 add this
+
+    const result = await uploadToCloudinary(req.file);
+    res.json({ fileUrl: result.fileUrl });
+  } catch (error) {
+    console.error("Cloudinary upload error:", error); // check terminal for the actual error
+    res
+      .status(500)
+      .json({ error: "Failed to upload file", detail: error?.message }); // 👈 return detail
+  }
 });
 
-const upload = multer({ storage });
-
-router.post("/upload-file", upload.single("file"), ctrl.uploadFile);
 router.post("/", ctrl.create);
 router.get("/", ctrl.getAll);
 router.delete("/", ctrl.deleteMany);

@@ -11,7 +11,6 @@ import filamentProfileRoutes from "./src/routes/filamentProfile.routes";
 import inventoryRouter from "./src/routes/inventory.routes";
 import printerEventRouter from "./src/routes/printerEvent.routes";
 import queueRoutes from "./src/routes/queue.routes";
-import path from "path";
 const app = express();
 
 app.use(cors());
@@ -28,5 +27,4 @@ app.use("/api/filament-profiles", filamentProfileRoutes);
 app.use("/api/inventory", inventoryRouter);
 app.use("/api/printer-events", printerEventRouter);
 app.use("/api/queue", queueRoutes);
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 export default app;

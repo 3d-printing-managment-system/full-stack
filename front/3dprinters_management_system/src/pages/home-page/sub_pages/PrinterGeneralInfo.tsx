@@ -25,16 +25,35 @@ function PrinterGeneralInfo() {
   const tagMap = Object.fromEntries(existingTags.map((t) => [t.id, t]));
   console.log("this is the map", tagMap);
 
+  // const currentJob =
+  //   printer?.jobs?.find(
+  //     (job) => job.status === "PRINTING" || job.status === "PAUSED",
+  //   ) ?? null;
+  // console.log("this is the current job", currentJob);
+  // const hasJob = currentJob !== null;
+  // const canControl =
+  //   currentJob?.status === "PRINTING" || currentJob?.status === "PAUSED";
+
+  // const isPrinting = currentJob?.status === "PRINTING";
+  // const isPaused = currentJob?.status === "PAUSED";
+
   const currentJob =
     printer?.jobs?.find(
-      (job) => job.status === "PRINTING" || job.status === "PAUSED",
+      (job) =>
+        job.status === "PRINTING" ||
+        job.status === "PAUSED" ||
+        job.status === "DISPATCHED" ||
+        (job.status === "QUEUED" &&
+          job.printerSelectionMode === "SPECIFIC_PRINTER"), // 👈 only QUEUED for specific printer
     ) ?? null;
-  const hasJob = currentJob !== null;
-  const canControl =
-    currentJob?.status === "PRINTING" || currentJob?.status === "PAUSED";
 
+  const hasJob = currentJob !== null;
+  const isQueued = currentJob?.status === "QUEUED";
+  const isDispatched = currentJob?.status === "DISPATCHED";
   const isPrinting = currentJob?.status === "PRINTING";
   const isPaused = currentJob?.status === "PAUSED";
+  const canControl = isPrinting || isPaused;
+  // const canCancel = hasJob && !isQueued; // or allow cancel on queued too — your call
 
   const duration = formatSecondsToDurationBetter(
     currentJob?.estimatedTime ?? 0,
@@ -98,7 +117,7 @@ function PrinterGeneralInfo() {
       </div>
 
       {/* MAIN CARD */}
-      <div className="bg-white border border-gray-100 rounded-xl p-8 shadow-sm">
+      {/* <div className="bg-white border border-gray-100 rounded-xl p-8 shadow-sm">
         <div className="flex justify-between items-end mb-4">
           <div>
             <p className="text-sm text-gray-500 mb-1">Currently printing:</p>
@@ -115,7 +134,6 @@ function PrinterGeneralInfo() {
           </span>
         </div>
 
-        {/* PROGRESS BAR */}
         <div className="w-full h-8 bg-gray-100 rounded-lg overflow-hidden mb-8">
           <div
             className="h-full bg-blue-500 transition-all duration-500 ease-in-out"
@@ -123,7 +141,6 @@ function PrinterGeneralInfo() {
           />
         </div>
 
-        {/* CONTROLS */}
         <div className="flex justify-center gap-4">
           <button
             disabled={!canControl}
@@ -161,6 +178,99 @@ function PrinterGeneralInfo() {
               handleCancelJob(currentJob?.id)
             }
             disabled={!hasJob}
+            className={`flex items-center gap-2 px-10 py-3 rounded-full font-bold transition ${
+              hasJob
+                ? "bg-red-100 text-red-600 hover:bg-red-200 cursor-pointer"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            <XCircle size={18} />
+            Cancel
+          </button>
+        </div>
+      </div> */}
+      {/* MAIN CARD */}
+      <div className="bg-white border border-gray-100 rounded-xl p-8 shadow-sm">
+        <div className="flex justify-between items-end mb-4">
+          <div>
+            <p className="text-sm text-gray-500 mb-1">Currently printing:</p>
+            <h2 className="text-lg font-semibold text-gray-700">
+              {currentJob?.part?.title ?? "Idle - No active job"}
+            </h2>
+
+            {isQueued && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg w-fit">
+                <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                Job queued for this printer — waiting to start...
+              </div>
+            )}
+
+            {isDispatched && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg w-fit">
+                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                Print job dispatched — starting soon...
+              </div>
+            )}
+          </div>
+
+          <span
+            className={`text-4xl font-black ${canControl ? "text-blue-600" : "text-gray-400"}`}
+          >
+            {isPrinting || isPaused
+              ? `${progress}%`
+              : isDispatched
+                ? "—"
+                : "0%"}
+          </span>
+        </div>
+
+        <div className="w-full h-8 bg-gray-100 rounded-lg overflow-hidden mb-8">
+          <div className="w-full h-8 bg-gray-100 rounded-lg overflow-hidden mb-8">
+            {isDispatched ? (
+              <div className="h-full bg-amber-300 animate-pulse w-full" />
+            ) : isQueued ? (
+              <div className="h-full bg-blue-200 w-1/4 animate-pulse" />
+            ) : (
+              <div
+                className="h-full bg-blue-500 transition-all duration-500 ease-in-out"
+                style={{ width: `${progress}%` }}
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="flex justify-center gap-4">
+          <button
+            disabled={!canControl} // 👈 dispatched = disabled
+            onClick={() => {
+              if (!currentJob) return;
+              if (isPrinting) handlePauseJob(currentJob.id);
+              else if (isPaused) handleResumeJob(currentJob.id);
+            }}
+            className={`flex items-center gap-2 px-10 py-3 rounded-full font-bold transition ${
+              canControl
+                ? "bg-blue-100 text-blue-700 hover:bg-blue-200 cursor-pointer"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            {isPrinting ? (
+              <>
+                <Pause size={18} /> Pause
+              </>
+            ) : (
+              <>
+                <Play size={18} /> Resume
+              </>
+            )}
+          </button>
+
+          <button
+            disabled={!hasJob}
+            onClick={() => {
+              if (!currentJob) return;
+              console.log("iam getting clicks");
+              handleCancelJob(currentJob.id);
+            }}
             className={`flex items-center gap-2 px-10 py-3 rounded-full font-bold transition ${
               hasJob
                 ? "bg-red-100 text-red-600 hover:bg-red-200 cursor-pointer"

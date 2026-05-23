@@ -12,6 +12,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { parseDurationToSeconds } from "@/lib/utils";
 import { useProfiles } from "@/context/ProfilesContext";
+import { toast } from "sonner";
 
 export function ThePreviewCard({ info, name, image, onSubmit, file }) {
   const { markSetupDone } = useProfiles();
@@ -21,8 +22,9 @@ export function ThePreviewCard({ info, name, image, onSubmit, file }) {
     e.preventDefault();
 
     try {
+      // 1️⃣ upload file to Google Drive
       const formData = new FormData();
-      formData.append("file", file); // file prop passed from parent
+      formData.append("file", file);
 
       const uploadRes = await axios.post(
         "http://localhost:3000/api/parts/upload-file",
@@ -30,38 +32,44 @@ export function ThePreviewCard({ info, name, image, onSubmit, file }) {
         { headers: { "Content-Type": "multipart/form-data" } },
       );
 
-      const fileUrl = uploadRes.data.fileUrl; // e.g. /uploads/files/model.3mf
+      const {
+        fileUrl, // 👈
+      } = uploadRes.data; // 👈 both from Drive
 
-      // Data sent to backend
+      // 2️⃣ save metadata + fileUrl to DB
       const newFile = {
         image: image,
         title: name,
         duration: parseDurationToSeconds(info.estimated_printing_time),
         nozzleDiameter: Number(info.nozzle_diameter),
-        // nozzleTemperature: Number(info.nozzle_temperature),
         filamentUsed: Number(info.filament_used),
-        fileUrl,
+        fileUrl, // 👈
         createdAt: new Date(),
       };
 
-      // POST to backend
       const response = await axios.post(
         "http://localhost:3000/api/parts",
         newFile,
       );
       markSetupDone("printFile");
 
-      // Prisma/backend response
       const savedFile = response.data;
-      console.log("here is the saved file", savedFile);
+      toast.success("File uploaded successfully!", {
+        description: `"${name}" has been added. Check the Files page to view it.`,
+      });
 
-      // Update frontend instantly
       onSubmit(savedFile);
-
-      // Return to files page
       navigate(-2);
     } catch (error) {
-      console.error("Upload failed:", error.response?.data || error.message);
+      console.error("Full error:", error);
+      console.error("Response data:", error?.response?.data);
+      console.error("Response status:", error?.response?.status);
+      toast.error("Upload failed", {
+        description:
+          error?.response?.data?.error ??
+          error?.response?.data?.message ??
+          error.message,
+      });
     }
   };
 

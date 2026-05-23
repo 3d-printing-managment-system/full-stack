@@ -49,6 +49,7 @@ function FormPrinter({ printer }: FormPrinterProps) {
   const { existingTags, refreshPrinters, refreshTags } = useProfiles();
   const [tagsList, setTagsList] = useState<Tags[]>(existingTags);
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   console.log("here is teh printer in the form", printer);
 
   const form = useForm<z.infer<typeof printerFormSchema>>({
@@ -65,33 +66,36 @@ function FormPrinter({ printer }: FormPrinterProps) {
   });
 
   async function onSubmit(data: z.infer<typeof printerFormSchema>) {
-    const payload = {
-      name: data.name,
-      model: data.model,
-      printerType: data.printerType,
-      ipAddress: data.ipAddress,
-      nozzleDiameter: data.nozzleDiameter,
-      cameraLink: data.cameraLink,
+    if (isSubmitting) return;
 
-      // ✅ ONLY IDS
-      tags: data.tags.map((tagId) => ({ printerId: printer?.id, tagId })), // string[]
-    };
-
-    console.log("PUT payload:", payload);
+    setIsSubmitting(true);
 
     try {
+      const payload = {
+        name: data.name,
+        model: data.model,
+        printerType: data.printerType,
+        ipAddress: data.ipAddress,
+        nozzleDiameter: data.nozzleDiameter,
+        cameraLink: data.cameraLink,
+        tags: data.tags.map((tagId) => ({
+          printerId: printer?.id,
+          tagId,
+        })),
+      };
+
       await axios.put(
         `http://localhost:3000/api/printers/${printer?.id}`,
         payload,
       );
 
-      toast.success("Printer updated successfully!");
+      await refreshPrinters();
 
-      refreshPrinters();
-      // navigate(-1);
+      toast.success("Printer updated successfully!");
     } catch (error: any) {
-      console.error(error);
       toast.error(error?.response?.data?.message || "Something went wrong");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 

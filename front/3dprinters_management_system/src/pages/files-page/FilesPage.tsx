@@ -9,10 +9,12 @@ import { useProfiles } from "@/context/ProfilesContext";
 import { DeleteButton } from "@/components/DeleteButton";
 import { useState } from "react";
 import { formatSecondsToDuration } from "@/lib/utils";
+import axios from "axios";
+import { toast } from "sonner";
 
 function FilesPage() {
   const location = useLocation();
-  const { files, deleteFiles, queuefile, setQueueFile } = useProfiles();
+  const { files, refreshParts } = useProfiles();
 
   const navigate = useNavigate();
 
@@ -146,26 +148,35 @@ function FilesPage() {
 
   const [rowSelection, setRowSelection] = useState({});
   console.log(rowSelection);
-  const handleDelete = () => {
+  const handleDelete = async () => {
     const selectedIds = Object.keys(rowSelection);
-    console.log(selectedIds);
 
-    // getting the title for the selected files to be deleted
-    const selectedTitles = files
-      .filter((file) => selectedIds.includes(file.id))
-      .map((file) => file.title);
-    console.log(selectedTitles);
-    console.log(queuefile);
+    if (selectedIds.length === 0) return;
 
-    deleteFiles(selectedIds);
-    setRowSelection({});
-    setQueueFile((prevQueue) =>
-      prevQueue.map((job) =>
-        selectedTitles.includes(job.part.title) && job.status === "QUEUED"
-          ? { ...job, state: "CANCELLED" } // cancel the queued job
-          : job,
-      ),
-    );
+    try {
+      const selectedTitles = files
+        .filter((file) => selectedIds.includes(file.id))
+        .map((file) => file.title);
+
+      await axios.delete("http://localhost:3000/api/parts", {
+        data: {
+          ids: selectedIds,
+        },
+      });
+
+      refreshParts();
+
+      setRowSelection({});
+
+      toast.success("Files deleted successfully");
+    } catch (error: any) {
+      console.error(error);
+
+      toast.error("Failed to delete files", {
+        description:
+          error?.response?.data?.message ?? "An unexpected error occurred.",
+      });
+    }
   };
 
   return (
@@ -181,6 +192,7 @@ function FilesPage() {
           <DeleteButton onDelete={handleDelete}>
             <Button
               className=""
+              disabled={Object.keys(rowSelection).length === 0}
               variant={
                 Object.keys(rowSelection).length === 0
                   ? "inactive"

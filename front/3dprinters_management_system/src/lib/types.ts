@@ -71,7 +71,14 @@ export type QueueFile = {
   printerId: string | null;
   fileId: string;
   profileId: string;
-  status: "QUEUED" | "PRINTING" | "PAUSED" | "DONE" | "FAILED" | "CANCELLED";
+  status:
+    | "QUEUED"
+    | "PRINTING"
+    | "PAUSED"
+    | "DONE"
+    | "FAILED"
+    | "CANCELLED"
+    | "DISPATCHED";
   progress: number;
   printerSelectionMode: "NEXT_AVAILABLE_WITH_SPECIFIC_TAG" | "SPECIFIC_PRINTER";
   estimatedTime: number; // seconds

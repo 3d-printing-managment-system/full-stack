@@ -176,7 +176,7 @@ function FormInventory({ inventoryItem }: FormInventoryProps) {
 
   return (
     <Card className="w-full sm:max-w-md overflow-visible">
-      <CardHeader className="pb-6 items-center justify-between">
+      <CardHeader className="pb-6 items-center justify-between flex">
         <div>
           {inventoryItem ? "Edit This Inventory Item" : "Update Filament Stock"}
         </div>
