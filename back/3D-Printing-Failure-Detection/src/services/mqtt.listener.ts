@@ -7,7 +7,7 @@ const client = mqtt.connect(brokerUrl, {
   username: process.env.MQTT_USERNAME,
   password: process.env.MQTT_PASSWORD,
   keepalive: 60,
-  clean: false,
+  clean: true,
   clientId: `backend-${Math.random().toString(16).slice(2)}`,
 });
 
@@ -82,10 +82,12 @@ client.on("message", async (topic, message) => {
     if (topic.includes("/jobs/job-state")) {
       const statusMap: any = {
         queued: "QUEUED",
-        running: "PRINTING",
+        printing: "PRINTING",
         paused: "PAUSED",
-        completed: "DONE",
+        done: "DONE",
         failed: "FAILED",
+        canceled: "CANCELLED",
+        dispatched: "DISPATCHED",
       };
 
       await prisma.printJob.update({

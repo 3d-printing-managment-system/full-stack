@@ -101,7 +101,7 @@ export const processQueue = async () => {
 const handleSpecificPrinterJobs = async (jobs: any[], idlePrinters: any[]) => {
   for (const job of jobs) {
     if (idlePrinters.length === 0) {
-      return;
+      return 'No idle printers available';
     }
 
     if (!job.printerId) {
@@ -115,7 +115,7 @@ const handleSpecificPrinterJobs = async (jobs: any[], idlePrinters: any[]) => {
 
     // printer not idle/available
     if (!printer) {
-      continue;
+      continue ;
     }
 
     // assign
