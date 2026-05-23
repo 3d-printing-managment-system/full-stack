@@ -361,7 +361,7 @@ export function DataTableDragable({
   const handleStartProcessing = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/queue/process",
+        "http://localhost:3000/api/queue/start",
       );
 
       console.log(response.data);

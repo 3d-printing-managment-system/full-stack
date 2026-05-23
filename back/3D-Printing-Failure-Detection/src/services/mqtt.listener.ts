@@ -1,5 +1,7 @@
 import mqtt from "mqtt";
 import { prisma } from "../../lib/prisma";
+import { processQueue } from "./queue.service";
+import { isProcessingEnabled } from "./queue.state";
 
 const brokerUrl = process.env.MQTT_BROKER_URL as string;
 
@@ -14,11 +16,10 @@ const client = mqtt.connect(brokerUrl, {
 client.on("connect", () => {
   console.log("✅ MQTT listener connected");
 
-  // subscribe to ALL pi messages
   client.subscribe("printers/+/printer-state");
   client.subscribe("printers/+/jobs/job-state");
   client.subscribe("printers/+/handshake");
-  client.subscribe("Printers/+/command-state")
+  client.subscribe("Printers/+/command-state");
 
   console.log("📡 Subscribed to printer topics");
 });
@@ -32,6 +33,7 @@ client.on("message", async (topic, message) => {
 
     // ======================================================
     // 1. HANDSHAKE
+    // Printer just came online as IDLE → check queue
     // ======================================================
     if (topic.includes("/handshake")) {
       await prisma.printer.upsert({
@@ -56,28 +58,40 @@ client.on("message", async (topic, message) => {
         },
       });
 
+      if (isProcessingEnabled()) await processQueue();
       return;
     }
 
     // ======================================================
     // 2. PRINTER STATE
+    // Printer reported IDLE → dispatch next job
     // ======================================================
     if (topic.includes("/printer-state")) {
+      const status = data.status
+        ? data.status.toUpperCase()
+        : "UNKNOWN";
+
       await prisma.printer.update({
         where: { id: data.printerId },
         data: {
-          status: data.status ? data.status.toUpperCase() : "UNKNOWN",
+          status,
           nozzleDiameter: data.nozzleDiameter,
           nozzleTemp: data.nozzleTemp,
           bedTemp: data.bedTemp,
         },
       });
 
+      if (status === "IDLE" && isProcessingEnabled()) {
+        await processQueue();
+      }
+
       return;
     }
 
     // ======================================================
     // 3. JOB STATE
+    // Job hit a terminal state → trigger queue
+    // Safety net in case printer-state IDLE comes late
     // ======================================================
     if (topic.includes("/jobs/job-state")) {
       const statusMap: any = {
@@ -90,15 +104,29 @@ client.on("message", async (topic, message) => {
         dispatched: "DISPATCHED",
       };
 
+      const mappedStatus = statusMap[data.status] ?? "QUEUED";
+
       await prisma.printJob.update({
         where: { id: data.jobId },
         data: {
-          status: statusMap[data.status] ?? "QUEUED",
+          status: mappedStatus,
           progress: Math.round((data.progress || 0) * 100),
-          startedAt: data.startedAt ? new Date(data.startedAt) : undefined,
-          finishedAt: data.finishedAt ? new Date(data.finishedAt) : undefined,
+          startedAt: data.startedAt
+            ? new Date(data.startedAt)
+            : undefined,
+          finishedAt: data.finishedAt
+            ? new Date(data.finishedAt)
+            : undefined,
         },
       });
+
+      const terminalStates = ["DONE", "FAILED", "CANCELLED"];
+      if (
+        terminalStates.includes(mappedStatus) &&
+        isProcessingEnabled()
+      ) {
+        await processQueue();
+      }
 
       return;
     }
@@ -108,11 +136,10 @@ client.on("message", async (topic, message) => {
     // ======================================================
     if (topic.includes("/command-state")) {
       await prisma.commandLog.update({
-        where: { id: data.commandLogId  },
+        where: { id: data.commandLogId },
         data: {
           status: data.status,
           response: data.response,
-        
         },
       });
       return;

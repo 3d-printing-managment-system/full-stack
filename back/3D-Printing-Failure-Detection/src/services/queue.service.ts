@@ -6,186 +6,116 @@ import { publishStartJob } from "./mqtt.service";
  * QUEUE PROCESSOR
  * =========================================================
  * Called when:
- * - a new job is created
- * - a printer becomes IDLE
- * - a job finishes/fails/cancels
+ * - manually triggered via POST /queue/start
+ * - a printer becomes IDLE (MQTT)
+ * - a job finishes/fails/cancels (MQTT)
+ *
+ * Runs a drain loop: keeps dispatching jobs until no more
+ * matches can be made (no idle printers or no queued jobs).
  * =========================================================
  */
 
 export const processQueue = async () => {
-  // ======================================================
-  // GET IDLE PRINTERS
-  // ======================================================
+  let matched = true;
 
-  const printers = await prisma.printer.findMany({
-    include: {
-      tags: true,
-    },
-  });
+  while (matched) {
+    matched = false;
 
-  const idlePrinters = printers.filter(
-    (printer) => printer.status === "IDLE"
-  );
+    // ====================================================
+    // REFRESH STATE
+    // Re-fetch from DB every iteration so we always work
+    // with accurate printer statuses and job statuses
+    // ====================================================
 
-  if (idlePrinters.length === 0) {
-    return "No idle printers available";
+    const printers = await prisma.printer.findMany({
+      include: {
+        tags: true,
+      },
+    });
+
+    const idlePrinters = printers.filter(
+      (printer) => printer.status === "IDLE"
+    );
+
+    if (idlePrinters.length === 0) break;
+
+    const jobs = await prisma.printJob.findMany({
+      where: {
+        status: "QUEUED",
+      },
+      orderBy: {
+        queuePosition: "asc",
+      },
+      include: {
+        part: true,
+      },
+    });
+
+    if (jobs.length === 0) break;
+
+    // ====================================================
+    // PRIORITY SPLIT
+    // ====================================================
+
+    const specificPrinterJobs = jobs.filter(
+      (job) => job.printerSelectionMode === "SPECIFIC_PRINTER"
+    );
+
+    const tagBasedJobs = jobs.filter(
+      (job) =>
+        job.printerSelectionMode ===
+        "NEXT_AVAILABLE_WITH_SPECIFIC_TAG"
+    );
+
+    // ====================================================
+    // STEP 1
+    // SPECIFIC PRINTER JOBS (highest priority)
+    // Break after first dispatch so we re-fetch fresh state
+    // ====================================================
+
+    for (const job of specificPrinterJobs) {
+      if (!job.printerId) continue;
+
+      const printer = idlePrinters.find(
+        (p) => p.id === job.printerId
+      );
+
+      if (!printer) continue;
+
+      await assignJobToPrinter(job, printer);
+
+      matched = true;
+      break;
+    }
+
+    // Re-fetch before handling tag-based jobs
+    if (matched) continue;
+
+    // ====================================================
+    // STEP 2
+    // TAG-BASED JOBS
+    // Break after first dispatch so we re-fetch fresh state
+    // ====================================================
+
+    for (const job of tagBasedJobs) {
+      const requiredTags = job.requiredTagIds || [];
+
+      const printer = idlePrinters.find((printer) =>
+        printer.tags.some((tag: any) =>
+          requiredTags.includes(tag.tagId)
+        )
+      );
+
+      if (!printer) continue;
+
+      await assignJobToPrinter(job, printer);
+
+      matched = true;
+      break;
+    }
   }
-
-  // ======================================================
-  // GET QUEUED JOBS
-  // ======================================================
-
-  const jobs = await prisma.printJob.findMany({
-    where: {
-      status: "QUEUED",
-    },
-    orderBy: {
-      queuePosition: "asc",
-    },
-    include: {
-      part: true,
-    },
-  });
-
-  if (jobs.length === 0) {
-    return "No queued jobs";
-  }
-
-  // ======================================================
-  // PRIORITY SPLIT
-  // ======================================================
-
-  const specificPrinterJobs = jobs.filter(
-    (job) => job.printerSelectionMode === "SPECIFIC_PRINTER"
-  );
-
-  const tagBasedJobs = jobs.filter(
-    (job) =>
-      job.printerSelectionMode ===
-      "NEXT_AVAILABLE_WITH_SPECIFIC_TAG"
-  );
-
-  // ======================================================
-  // STEP 1
-  // HANDLE SPECIFIC PRINTER JOBS FIRST
-  // ======================================================
-
-  await handleSpecificPrinterJobs(
-    specificPrinterJobs,
-    idlePrinters
-  );
-
-  // ======================================================
-  // REFRESH PRINTER STATES
-  // ======================================================
-
-  const refreshedPrinters = await prisma.printer.findMany({
-    include: {
-      tags: true,
-    },
-  });
-
-  const refreshedIdlePrinters = refreshedPrinters.filter(
-    (printer) => printer.status === "IDLE"
-  );
-
-  // ======================================================
-  // STEP 2
-  // HANDLE TAG BASED JOBS
-  // ======================================================
-
-  await handleTagBasedJobs(
-    tagBasedJobs,
-    refreshedIdlePrinters
-  );
 
   return "Queue processed successfully";
-};
-
-/**
- * =========================================================
- * HANDLE SPECIFIC PRINTER JOBS
- * =========================================================
- */
-
-const handleSpecificPrinterJobs = async (
-  jobs: any[],
-  idlePrinters: any[]
-) => {
-  for (const job of jobs) {
-    if (idlePrinters.length === 0) {
-      return 'No idle printers available';
-    }
-
-    if (!job.printerId) {
-      continue;
-    }
-
-    // find the exact requested printer
-    const printer = idlePrinters.find(
-      (printer) => printer.id === job.printerId
-    );
-
-    // printer not idle/available
-    if (!printer) {
-      continue ;
-    }
-
-    // assign
-    await assignJobToPrinter(job, printer);
-
-    // remove printer from local idle list
-    const index = idlePrinters.findIndex(
-      (p) => p.id === printer.id
-    );
-
-    if (index !== -1) {
-      idlePrinters.splice(index, 1);
-    }
-  }
-};
-
-/**
- * =========================================================
- * HANDLE TAG BASED JOBS
- * =========================================================
- */
-
-const handleTagBasedJobs = async (
-  jobs: any[],
-  idlePrinters: any[]
-) => {
-  for (const job of jobs) {
-    if (idlePrinters.length === 0) {
-      return;
-    }
-
-    const requiredTags = job.requiredTagIds || [];
-
-    // find first printer containing one of the tags
-    const printer = idlePrinters.find((printer) =>
-      printer.tags.some((tag: any) =>
-        requiredTags.includes(tag.tagId)
-      )
-    );
-
-    // no compatible printer available
-    if (!printer) {
-      continue;
-    }
-
-    // assign
-    await assignJobToPrinter(job, printer);
-
-    // remove printer from local idle list
-    const index = idlePrinters.findIndex(
-      (p) => p.id === printer.id
-    );
-
-    if (index !== -1) {
-      idlePrinters.splice(index, 1);
-    }
-  }
 };
 
 /**
@@ -200,10 +130,7 @@ const handleTagBasedJobs = async (
  * =========================================================
  */
 
-const assignJobToPrinter = async (
-  job: any,
-  printer: any
-) => {
+const assignJobToPrinter = async (job: any, printer: any) => {
   // ======================================================
   // DB TRANSACTION
   // prevents race conditions
@@ -234,11 +161,11 @@ const assignJobToPrinter = async (
   // MQTT DISPATCH
   // ======================================================
 
- await publishStartJob({
-  printerId: printer.id,
-  jobId: job.id,
-  fileUrl: job.part.fileUrl!,
-});
+  await publishStartJob({
+    printerId: printer.id,
+    jobId: job.id,
+    fileUrl: job.part.fileUrl!,
+  });
 
   // ======================================================
   // EVENT LOGGING
