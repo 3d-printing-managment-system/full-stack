@@ -2,6 +2,7 @@ import mqtt from "mqtt";
 import { prisma } from "../../lib/prisma";
 import { processQueue } from "./queue.service";
 import { isProcessingEnabled } from "./queue.state";
+import { updateCommandLog } from "./cmdLogs.service";
 
 const brokerUrl = process.env.MQTT_BROKER_URL as string;
 
@@ -19,7 +20,7 @@ client.on("connect", () => {
   client.subscribe("printers/+/printer-state");
   client.subscribe("printers/+/jobs/job-state");
   client.subscribe("printers/+/handshake");
-  client.subscribe("Printers/+/command-state");
+  client.subscribe("printers/+/command-state");
 
   console.log("📡 Subscribed to printer topics");
 });
@@ -141,17 +142,38 @@ client.on("message", async (topic, message) => {
     // ======================================================
     // 4. COMMAND STATE
     // ======================================================
-    if (topic.includes("/command-state")) {
-      await prisma.commandLog.update({
-        where: { id: data.commandLogId },
-        data: {
-          status: data.status,
-          response: data.response,
-        },
-      });
+   if (topic.includes("/command-state")) {
+  try {
+    const commandLogId = data.commandLogId;
+
+    if (!commandLogId) {
+      console.warn("Missing commandLogId in MQTT payload");
       return;
     }
 
+    const existing = await prisma.commandLog.findUnique({
+      where: { id: commandLogId },
+    });
+
+    if (!existing) {
+      console.warn("Command log not found:", commandLogId);
+      return;
+    }
+
+    await prisma.commandLog.update({
+      where: { id: commandLogId },
+      data: {
+        status: (data.status ?? "").toUpperCase(),
+        response: data.response ?? null,
+      },
+    });
+
+    console.log("✅ Command log updated:", commandLogId);
+    return;
+  } catch (err) {
+    console.error("❌ command-state update failed:", err);
+  }
+}
   } catch (err) {
     console.error("❌ MQTT ERROR:", err);
   }

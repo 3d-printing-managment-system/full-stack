@@ -325,6 +325,15 @@ export const cancelJob = async (id: string) => {
   if (!cancellableStatuses.includes(job.status)) {
     throw new Error("Job cannot be cancelled");
   }
+   if (job.status === "QUEUED") {
+    return prisma.printJob.update({
+      where: { id },
+      data: {
+        status: "CANCELLED",
+        finishedAt: new Date(),
+      },
+    });
+  }
 
   if (!job.printerId) {
     throw new Error(
