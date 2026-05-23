@@ -23,7 +23,6 @@ function ProfilesInventoryPage() {
   console.log("profiles", profiles);
   console.log("inventory", inventory);
 
-
   const location = useLocation();
   const isProfilesInventory = location.pathname.endsWith("/profiles-inventory");
 
@@ -208,6 +207,7 @@ function ProfilesInventoryPage() {
           <DeleteButton onDelete={handleDelete}>
             <Button
               className=""
+              disabled={Object.keys(rowSelection).length === 0}
               variant={
                 Object.keys(rowSelection).length === 0
                   ? "inactive"

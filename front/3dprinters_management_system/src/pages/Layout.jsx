@@ -26,6 +26,7 @@ import PrinterGeneralInfo from "./home-page/sub_pages/PrinterGeneralInfo";
 import SettingsPrinter from "./home-page/sub_pages/SettingsPrinter";
 import ProfilesInventoryPage from "./materials-page/sub_pages/ProfilesInventoryPage";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "sonner";
 function Layout() {
   return (
     <TooltipProvider>
@@ -39,6 +40,7 @@ function Layout() {
               <Outlet />
             </main>
           </div>
+          <Toaster richColors position="bottom-right" expand={true} />
         </div>
       </SidebarProvider>
     </TooltipProvider>

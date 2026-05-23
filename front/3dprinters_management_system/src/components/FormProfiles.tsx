@@ -87,7 +87,9 @@ function FormProfiles({ profile }: FormProfilesProps) {
         );
 
         updateProfile({ ...profile, ...data });
-        toast("Profile updated successfully!");
+        toast.success("Profile updated successfully!", {
+          description: `${data.name} has been updated.`,
+        });
       } else {
         // CREATE
         const res = await axios.post(
@@ -99,20 +101,26 @@ function FormProfiles({ profile }: FormProfilesProps) {
 
         addProfile(res.data);
         markSetupDone("filament");
-        toast("Profile added successfully!");
+        toast.success("Profile added successfully!", {
+          description: `${data.name} is now available for printing.`,
+        });
         form.reset();
       }
 
       navigate(-1);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast("Something went wrong ❌");
+      toast.error("Something went wrong", {
+        description:
+          error?.response?.data?.message ??
+          "Failed to save the filament profile.",
+      });
     }
   }
 
   return (
     <Card className="w-full sm:max-w-md overflow-visible">
-      <CardHeader className="pb-6 items-center justify-between">
+      <CardHeader className="pb-6 items-center justify-between flex">
         <div>
           {profile ? "Edit Filament Profile" : "Create Filament Profile"}
         </div>

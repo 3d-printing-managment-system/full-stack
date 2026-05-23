@@ -52,6 +52,7 @@ interface ProfilesContextType {
   refreshInventory: () => Promise<void>;
   refreshProfiles: () => Promise<void>;
   refreshJobs: () => Promise<void>;
+  refreshParts: () => Promise<void>;
   refreshPrinters: () => Promise<void>;
   refreshCommands: () => Promise<void>;
   refreshTags: () => Promise<void>;
@@ -234,6 +235,14 @@ export const ProfilesProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     fetchFiles();
   }, []);
+  const refreshParts = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/api/parts");
+      setFiles(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const [queuefile, setQueueFile] = useState<QueueFile[]>([]);
   // const fetchQueueFiles = async () => {
@@ -386,6 +395,7 @@ export const ProfilesProvider: React.FC<{ children: React.ReactNode }> = ({
         updateTag,
         deleteTag,
         refreshTags,
+        refreshParts,
         refreshInventory,
         refreshProfiles,
         refreshJobs,

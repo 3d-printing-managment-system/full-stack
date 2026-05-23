@@ -25,7 +25,6 @@ import {
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { PrintModelFile, Tags } from "@/lib/types";
-// import { useProfiles } from "@/context/ProfilesContext";
 import { formatSecondsToDuration } from "@/lib/utils";
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -141,7 +140,7 @@ function PrintFileForm() {
       );
       markSetupDone("firstPrint");
 
-      toast.success("Added to queue successfully");
+      toast.success("Added to queue successfully, check the queue page");
 
       // refresh table / list
       await refreshJobs();

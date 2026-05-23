@@ -76,13 +76,3 @@ export const deleteMany: RequestHandler = async (req, res) => {
     });
   }
 };
-
-export const uploadFile: RequestHandler = async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-    const fileUrl = `/uploads/files/${req.file.filename}`;
-    res.json({ fileUrl });
-  } catch (error) {
-    handleError(res, error);
-  }
-};
