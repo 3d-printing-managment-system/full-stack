@@ -7,11 +7,13 @@ type IdsParam = { id: string[] };
 type PrinterParam = { printerId: string };
 
 const handleError = (res: any, error: unknown) => {
-  const message = error instanceof Error ? error.message : "Internal server error";
-  const status =
-    message.includes("not found") ? 404 :
-    message.includes("Invalid") || message.includes("must") ? 400 :
-    500;
+  const message =
+    error instanceof Error ? error.message : "Internal server error";
+  const status = message.includes("not found")
+    ? 404
+    : message.includes("Invalid") || message.includes("must")
+      ? 400
+      : 500;
   res.status(status).json({ error: message });
 };
 
@@ -43,7 +45,10 @@ export const getCommandLogById: RequestHandler<IdParam> = async (req, res) => {
   }
 };
 
-export const getCommandLogsByPrinter: RequestHandler<PrinterParam> = async (req, res) => {
+export const getCommandLogsByPrinter: RequestHandler<PrinterParam> = async (
+  req,
+  res,
+) => {
   try {
     const data = await service.getCommandLogsByPrinter(req.params.printerId);
     res.json(data);
@@ -70,7 +75,10 @@ export const deleteCommandLog: RequestHandler<IdParam> = async (req, res) => {
   }
 };
 
-export const deleteManyCommandLogs :RequestHandler<IdsParam[]   >= async (req, res) => {
+export const deleteManyCommandLogs: RequestHandler<IdsParam[]> = async (
+  req,
+  res,
+) => {
   try {
     const { ids } = req.body;
 
@@ -84,5 +92,21 @@ export const deleteManyCommandLogs :RequestHandler<IdsParam[]   >= async (req, r
     return res.status(400).json({
       message: error.message,
     });
+  }
+};
+
+export const getLastCommandLogByPrinter: RequestHandler<PrinterParam> = async (
+  req,
+  res,
+) => {
+  try {
+    const data = await service.getLastCommandLogByPrinter(req.params.printerId);
+    if (!data)
+      return res
+        .status(404)
+        .json({ error: "No command logs found for this printer" });
+    res.json(data);
+  } catch (error) {
+    handleError(res, error);
   }
 };

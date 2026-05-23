@@ -63,7 +63,7 @@ export function ResourcesModal({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  console.log("clicked");
+  // console.log("clicked");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="min-w-[620px] p-7">

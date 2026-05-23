@@ -11,7 +11,7 @@ type PrinterPageProps = {
 
 function PrinterPage({ title }: PrinterPageProps) {
   const { idPrinter } = useParams();
-  console.log("here is the printer id", idPrinter);
+  // console.log("here is the printer id", idPrinter);
   // const [printer, setPrinter] = useState<Printer | null>(null);
   // useEffect(() => {
   //   const fetchPrinter = async () => {

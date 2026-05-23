@@ -10,6 +10,7 @@ import {
   ArrowUp,
   ArrowDown,
   Move,
+  Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ type Log = {
 const GcodeConsolePrinter = () => {
   const printer = useOutletContext<Printer>();
   const { commands, refreshCommands } = useProfiles();
+  const [isWaiting, setIsWaiting] = useState(false);
   const [command, setCommand] = useState("");
   const [templateMode, setTemplateMode] = useState(false);
   const [stepSize, setStepSize] = useState("10");
@@ -70,6 +72,36 @@ const GcodeConsolePrinter = () => {
         time: new Date().toLocaleTimeString(),
       },
     ]);
+  };
+
+  const pollForResponse = async (printerId: string) => {
+    const maxAttempts = 20;
+    const interval = 500; // check every 500ms
+
+    for (let i = 0; i < maxAttempts; i++) {
+      await new Promise((res) => setTimeout(res, interval));
+
+      try {
+        const { data } = await axios.get(
+          `http://localhost:3000/api/command-logs/printer/${printerId}/last`,
+        );
+        console.log("the last", data);
+
+        // check if updatedAt is newer than when we sent
+        if (data.updatedAt !== null) {
+          addLog(
+            "received",
+            `status: ${data.status}, response: ${data.response ? data.response : "no response yet"}`,
+          );
+          return;
+        }
+      } catch {
+        // keep polling
+      }
+    }
+
+    // timeout after maxAttempts
+    addLog("received", "Timeout — no response received");
   };
 
   // ================= MAIN SEND =================
@@ -133,25 +165,19 @@ const GcodeConsolePrinter = () => {
       (cmd) =>
         cmd.command.trim().toUpperCase() === command.trim().toUpperCase(),
     );
-    console.log(
-      "this si the matched command",
-      matchedCommand,
-      "its id : ",
-      matchedCommand?.id,
-    );
+    // console.log(
+    //   "this si the matched command",
+    //   matchedCommand,
+    //   "its id : ",
+    //   matchedCommand?.id,
+    // );
 
     // If found → use its id
     // If not → commandId = null
     try {
-      console.log("here is the printer", printer, "ans its id", printer?.id);
+      // console.log("here is the printer", printer, "ans its id", printer?.id);
       // Actually send to printer
       if (matchedCommand) {
-        // await axios.post(
-        //   `http://localhost:3000/api/gcode-commands/${matchedCommand.id}/send`,
-        //   {
-        //     printerId: printer.id,
-        //   },
-        // );
         await axios.post(
           `http://localhost:3000/api/gcode-commands/${matchedCommand.id}/send?printerId=${printer.id}`,
         );
@@ -163,7 +189,8 @@ const GcodeConsolePrinter = () => {
       }
 
       addLog("sent", command);
-      addLog("received", "Command sent successfully");
+      // addLog("received", "Command sent successfully");
+      await pollForResponse(printer.id);
     } catch (err) {
       addLog("received", "Failed to send command");
     }
@@ -397,23 +424,33 @@ const GcodeConsolePrinter = () => {
             <Input
               type=""
               value={command}
+              disabled={isWaiting}
               onChange={(e) => setCommand(e.target.value)}
               className="bg-slate-950 border-slate-700 text-slate-200 font-mono"
               placeholder={
-                templateMode
-                  ? "Template mode → NAME : COMMAND"
-                  : "Enter G-Code (e.g. M104 S200)"
+                isWaiting
+                  ? "⏳ Waiting for response..."
+                  : templateMode
+                    ? "Template mode → NAME : COMMAND"
+                    : "Enter G-Code (e.g. M104 S200)"
               }
             />
 
             <Button
+              disabled={isWaiting}
               type="submit"
               className="bg-blue-600 hover:bg-blue-500 px-6"
             >
-              <Send size={18} />
+              {/* <Send size={18} /> */}
+              {isWaiting ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Send size={18} />
+              )}
             </Button>
 
             <Button
+              disabled={isWaiting}
               type="button"
               variant="outline"
               className="text-white bg-transparent"

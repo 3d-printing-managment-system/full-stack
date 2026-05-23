@@ -189,7 +189,7 @@ export const ProfilesProvider: React.FC<{ children: React.ReactNode }> = ({
     refreshPrinters();
 
     const interval = setInterval(() => {
-      console.log("boombastic");
+      // console.log("boombastic");
       refreshJobs();
       refreshPrinters();
     }, 3000);
