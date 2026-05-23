@@ -25,12 +25,13 @@ import {
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { PrintModelFile, Tags } from "@/lib/types";
-import { useProfiles } from "@/context/ProfilesContext";
+// import { useProfiles } from "@/context/ProfilesContext";
 import { formatSecondsToDuration } from "@/lib/utils";
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import axios from "axios";
+import { useProfiles } from "@/context/ProfilesContext";
 
 /* ---------------- SCHEMA ---------------- */
 
@@ -63,6 +64,7 @@ function PrintFileForm() {
     setExistingTags,
     refreshJobs,
     markSetupDone,
+    printers,
   } = useProfiles();
 
   const { data } = location.state as {
@@ -445,7 +447,7 @@ function PrintFileForm() {
             )}
 
             {/* PRINTER (ONLY SPECIFIC MODE) */}
-            {/* {mode === "SPECIFIC PRINTER" && (
+            {mode === "SPECIFIC_PRINTER" && (
               <Controller
                 name="printerId"
                 control={form.control}
@@ -459,17 +461,46 @@ function PrintFileForm() {
                       </SelectTrigger>
 
                       <SelectContent className="">
-                        {printers.map((p: any) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.name}
-                          </SelectItem>
-                        ))}
+                        {printers.filter((p) => p.status === "IDLE").length ===
+                        0 ? (
+                          <div className="px-3 py-2 text-sm text-muted-foreground">
+                            No idle printers available
+                          </div>
+                        ) : (
+                          printers
+                            .filter((p) => p.status === "IDLE")
+                            .map((p) => (
+                              <SelectItem key={p.id} value={p.id} className="">
+                                <div className="flex flex-col">
+                                  <div className="font-medium">{p.name}</div>
+
+                                  <div className="flex gap-1 text-gray-400 text-sm">
+                                    <div>{p.printerType}</div>
+
+                                    <Separator
+                                      orientation="vertical"
+                                      className=""
+                                    />
+
+                                    <div>{p.model}</div>
+
+                                    <Separator
+                                      orientation="vertical"
+                                      className=""
+                                    />
+
+                                    <div>{p.nozzleDiameter}mm</div>
+                                  </div>
+                                </div>
+                              </SelectItem>
+                            ))
+                        )}
                       </SelectContent>
                     </Select>
                   </Field>
                 )}
               />
-            )} */}
+            )}
 
             {/* QUANTITY */}
             <Controller

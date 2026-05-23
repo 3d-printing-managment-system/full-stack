@@ -82,3 +82,11 @@ export const deleteManyCommandLogsService = async (ids: string[]) => {
 
   return result;
 };
+
+export const getLastCommandLogByPrinter = async (printerId: string) => {
+  return prisma.commandLog.findFirst({
+    where: { printerId },
+    orderBy: { createdAt: "desc" },
+    include: { printer: true, gcodeCommand: true },
+  });
+};

@@ -25,6 +25,7 @@ import { Printer, Tags } from "@/lib/types";
 import { useState } from "react";
 import { useProfiles } from "@/context/ProfilesContext";
 import axios from "axios";
+import { generateLightHexColor } from "@/lib/utils";
 
 export const printerFormSchema = z.object({
   name: z.string().min(2, "Name is too short"),
@@ -45,7 +46,7 @@ type FormPrinterProps = {
 };
 
 function FormPrinter({ printer }: FormPrinterProps) {
-  const { existingTags, refreshPrinters } = useProfiles();
+  const { existingTags, refreshPrinters, refreshTags } = useProfiles();
   const [tagsList, setTagsList] = useState<Tags[]>(existingTags);
   const navigate = useNavigate();
   console.log("here is teh printer in the form", printer);
@@ -162,30 +163,69 @@ function FormPrinter({ printer }: FormPrinterProps) {
                   field.onChange(selectedIds.filter((t) => t !== id));
                 };
 
+                // const createTag = async (name: string) => {
+                //   const trimmed = name.trim();
+                //   if (!trimmed) return;
+
+                //   // check if exists
+                //   const exists = allTags.find(
+                //     (t) => t.name.toLowerCase() === trimmed.toLowerCase(),
+                //   );
+
+                //   if (exists) {
+                //     addTag(exists.id);
+                //     return;
+                //   }
+
+                //   // create NEW tag (you should ideally call backend here)
+                //   const newTag: Tags = {
+                //     id: crypto.randomUUID(),
+                //     name: trimmed,
+                //   };
+
+                //   // update UI source (important)
+                //   setTagsList((prev) => [...prev, newTag]);
+
+                //   addTag(newTag.id);
+                // };
                 const createTag = async (name: string) => {
                   const trimmed = name.trim();
                   if (!trimmed) return;
 
-                  // check if exists
                   const exists = allTags.find(
                     (t) => t.name.toLowerCase() === trimmed.toLowerCase(),
                   );
-
                   if (exists) {
                     addTag(exists.id);
                     return;
                   }
 
-                  // create NEW tag (you should ideally call backend here)
-                  const newTag: Tags = {
-                    id: crypto.randomUUID(),
-                    name: trimmed,
-                  };
+                  try {
+                    const { data: newTag } = await axios.post(
+                      "http://localhost:3000/api/tags",
+                      {
+                        name: trimmed,
+                        color: generateLightHexColor(),
+                      },
+                    );
 
-                  // update UI source (important)
-                  setTagsList((prev) => [...prev, newTag]);
+                    if (printer?.id) {
+                      await axios.post(
+                        `http://localhost:3000/api/printers/${printer.id}/tags`,
+                        {
+                          tagId: newTag.id,
+                        },
+                      );
+                    }
+                    await refreshTags();
 
-                  addTag(newTag.id);
+                    setTagsList((prev) => [...prev, newTag]);
+                    addTag(newTag.id);
+                  } catch (error: any) {
+                    toast.error(
+                      error?.response?.data?.message || "Failed to create tag",
+                    );
+                  }
                 };
 
                 const canCreate =
@@ -195,8 +235,8 @@ function FormPrinter({ printer }: FormPrinterProps) {
                   );
 
                 return (
-                  <Field>
-                    <FieldLabel>Tags</FieldLabel>
+                  <Field className="">
+                    <FieldLabel className="">Tags</FieldLabel>
 
                     {/* INPUT */}
                     <div

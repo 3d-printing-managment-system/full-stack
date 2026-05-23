@@ -6,10 +6,10 @@ const router = Router({ mergeParams: true });
 router.post("/", ctrl.createCommandLog);
 router.get("/", ctrl.getCommandLogs);
 router.delete("/", ctrl.deleteManyCommandLogs);
+router.get("/printer/:printerId/last", ctrl.getLastCommandLogByPrinter);
 router.get("/:id", ctrl.getCommandLogById);
 router.put("/:id", ctrl.updateCommandLog);
 router.delete("/:id", ctrl.deleteCommandLog);
-
 
 /**
  * @swagger

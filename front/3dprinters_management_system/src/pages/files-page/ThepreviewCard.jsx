@@ -14,7 +14,7 @@ import { parseDurationToSeconds } from "@/lib/utils";
 import { useProfiles } from "@/context/ProfilesContext";
 
 export function ThePreviewCard({ info, name, image, onSubmit }) {
-  const {markSetupDone} = useProfiles();
+  const { markSetupDone } = useProfiles();
   const location = useLocation();
   const navigate = useNavigate();
   const handleSubmit = async (e) => {

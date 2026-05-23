@@ -114,6 +114,7 @@ export type Printer = {
 export type Tags = {
   id: string;
   name: string;
+  color: string;
 };
 
 export type TagsPrinterRelation = {

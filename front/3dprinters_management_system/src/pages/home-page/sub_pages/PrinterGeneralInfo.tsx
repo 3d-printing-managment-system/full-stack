@@ -23,7 +23,7 @@ function PrinterGeneralInfo() {
     existingTags,
   } = useProfiles();
   const tagMap = Object.fromEntries(existingTags.map((t) => [t.id, t]));
-  console.log("this is the printer", printer);
+  console.log("this is the map", tagMap);
 
   const currentJob =
     printer?.jobs?.find(

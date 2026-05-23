@@ -62,6 +62,7 @@ import { FilterButtons } from "../FilterButtons";
 import { formatSecondsToDuration } from "@/lib/utils";
 import axios from "axios";
 import { useProfiles } from "@/context/ProfilesContext";
+import { Separator } from "../ui/separator";
 
 export function DataTableDragable({
   data: initialData,
@@ -69,7 +70,11 @@ export function DataTableDragable({
   data: QueueFile[];
 }) {
   const [data, setData] = React.useState<QueueFile[]>([]);
-  const { handleCancelJob } = useProfiles();
+  const { handleCancelJob, printers } = useProfiles();
+
+  const printerMap = Object.fromEntries(
+    printers.map((printer) => [printer.id, printer]),
+  );
   const originalData = React.useRef<QueueFile[]>([]);
   console.log("the data fo teh print queu", data);
 
@@ -174,7 +179,33 @@ export function DataTableDragable({
     {
       accessorKey: "matched_printer",
       header: "Matched Printer",
-      cell: ({ row }) => <div className="font-medium">not yet</div>,
+      cell: ({ row }) => {
+        const printer = row.original.printerId
+          ? printerMap[row.original.printerId]
+          : null;
+
+        if (!printer) {
+          return <div className="text-muted-foreground">Not yet</div>;
+        }
+
+        return (
+          <div className="flex flex-col">
+            <div className="font-medium">{printer.name}</div>
+
+            <div className="flex gap-1 text-gray-400 text-sm">
+              <div>{printer.printerType}</div>
+
+              <Separator orientation="vertical" className="" />
+
+              <div>{printer.model}</div>
+
+              <Separator orientation="vertical" className="" />
+
+              <div>{printer.nozzleDiameter}mm</div>
+            </div>
+          </div>
+        );
+      },
     },
 
     {
