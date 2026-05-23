@@ -13,7 +13,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { parseDurationToSeconds } from "@/lib/utils";
 import { useProfiles } from "@/context/ProfilesContext";
 
-export function ThePreviewCard({ info, name, image, onSubmit }) {
+export function ThePreviewCard({ info, name, image, onSubmit, file }) {
   const { markSetupDone } = useProfiles();
   const location = useLocation();
   const navigate = useNavigate();
@@ -21,6 +21,17 @@ export function ThePreviewCard({ info, name, image, onSubmit }) {
     e.preventDefault();
 
     try {
+      const formData = new FormData();
+      formData.append("file", file); // file prop passed from parent
+
+      const uploadRes = await axios.post(
+        "http://localhost:3000/api/parts/upload-file",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+
+      const fileUrl = uploadRes.data.fileUrl; // e.g. /uploads/files/model.3mf
+
       // Data sent to backend
       const newFile = {
         image: image,
@@ -29,6 +40,7 @@ export function ThePreviewCard({ info, name, image, onSubmit }) {
         nozzleDiameter: Number(info.nozzle_diameter),
         // nozzleTemperature: Number(info.nozzle_temperature),
         filamentUsed: Number(info.filament_used),
+        fileUrl,
         createdAt: new Date(),
       };
 

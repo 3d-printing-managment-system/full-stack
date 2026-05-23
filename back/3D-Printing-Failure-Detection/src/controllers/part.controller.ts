@@ -4,11 +4,13 @@ import * as service from "../services/part.service";
 type IdParam = { id: string };
 
 const handleError = (res: any, error: unknown) => {
-  const message = error instanceof Error ? error.message : "Internal server error";
-  const status =
-    message.includes("not found") ? 404 :
-    message.includes("Invalid") || message.includes("must") ? 400 :
-    500;
+  const message =
+    error instanceof Error ? error.message : "Internal server error";
+  const status = message.includes("not found")
+    ? 404
+    : message.includes("Invalid") || message.includes("must")
+      ? 400
+      : 500;
   res.status(status).json({ error: message });
 };
 
@@ -72,5 +74,15 @@ export const deleteMany: RequestHandler = async (req, res) => {
     return res.status(400).json({
       message: error.message,
     });
+  }
+};
+
+export const uploadFile: RequestHandler = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+    const fileUrl = `/uploads/files/${req.file.filename}`;
+    res.json({ fileUrl });
+  } catch (error) {
+    handleError(res, error);
   }
 };
