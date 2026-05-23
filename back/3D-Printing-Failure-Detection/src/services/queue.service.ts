@@ -114,7 +114,7 @@ const handleSpecificPrinterJobs = async (
 ) => {
   for (const job of jobs) {
     if (idlePrinters.length === 0) {
-      return;
+      return 'No idle printers available';
     }
 
     if (!job.printerId) {
@@ -128,7 +128,7 @@ const handleSpecificPrinterJobs = async (
 
     // printer not idle/available
     if (!printer) {
-      continue;
+      continue ;
     }
 
     // assign

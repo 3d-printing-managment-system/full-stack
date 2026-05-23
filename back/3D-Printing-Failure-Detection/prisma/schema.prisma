@@ -8,15 +8,15 @@ datasource db {
 
 model Printer {
   id              String           @id @default(uuid())
-  name            String
-  model           String
+  name            String?
+  model           String?
   status          PrinterStatus
-  ipAddress       String
-  nozzleDiameter  Float
-  bedTemp         Float
-  nozzleTemp      Float
-  cameraLink      String
-  printerType     String
+  ipAddress       String?
+  nozzleDiameter  Float?
+  bedTemp         Float?
+  nozzleTemp      Float?
+  cameraLink      String?
+  printerType     String?
   createdAt       DateTime         @default(now())
   commandLogs     CommandLog[]
   maintenanceLogs MaintenanceLog[]
@@ -48,7 +48,7 @@ model CommandLog {
   response     String?
   status       CommandStatus
   createdAt    DateTime      @default(now())
-  updatedAt    DateTime?      @updatedAt
+  updatedAt    DateTime?     @updatedAt
   rawCommand   String
   gcodeCommand GcodeCommand? @relation(fields: [commandId], references: [id])
   printer      Printer       @relation(fields: [printerId], references: [id])

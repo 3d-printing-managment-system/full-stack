@@ -4,7 +4,7 @@ const client = mqtt.connect(process.env.MQTT_BROKER_URL!, {
   username: process.env.MQTT_USERNAME,
   password: process.env.MQTT_PASSWORD,
   keepalive: 60,
-  clean: false,
+  clean: true,
   clientId: `backend-listener-${Math.random().toString(16).substring(2, 8)}`,
 });
 
