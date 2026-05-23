@@ -104,7 +104,14 @@ client.on("message", async (topic, message) => {
         DISPATCHED: "DISPATCHED",
       };
 
-      const mappedStatus = statusMap[data.status] ?? "QUEUED";
+      const rawStatus = (data.status ?? "").toUpperCase();
+  const mappedStatus = statusMap[rawStatus];
+
+  // ✅ unknown status → skip entirely, never touch the job
+  if (!mappedStatus) {
+    console.warn(`⚠️ Unknown job status received: "${data.status}" for job ${data.jobId} — ignored`);
+    return;
+  }
 
       await prisma.printJob.update({
         where: { id: data.jobId },
