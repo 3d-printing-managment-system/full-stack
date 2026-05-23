@@ -110,7 +110,7 @@ client.on("message", async (topic, message) => {
         where: { id: data.jobId },
         data: {
           status: mappedStatus,
-          progress: Math.round((data.progress || 0) * 100),
+          progress:data.progress,
           startedAt: data.startedAt
             ? new Date(data.startedAt)
             : undefined,
