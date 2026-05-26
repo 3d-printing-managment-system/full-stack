@@ -84,7 +84,6 @@ const GcodeConsolePrinter = () => {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // ================= AUTO SCROLL =================
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -105,7 +104,7 @@ const GcodeConsolePrinter = () => {
 
   const pollForResponse = async (printerId: string) => {
     const maxAttempts = 20;
-    const interval = 1000; // check every 500ms
+    const interval = 1000;
 
     for (let i = 0; i < maxAttempts; i++) {
       await new Promise((res) => setTimeout(res, interval));
@@ -117,7 +116,6 @@ const GcodeConsolePrinter = () => {
         console.log("the last", data);
         console.log("checking", data.updatedAt > data.createdAt);
 
-        // check if updatedAt is newer than when we sent
         if (new Date(data.updatedAt) > new Date(data.createdAt)) {
           addLog(
             "received",
@@ -128,7 +126,6 @@ const GcodeConsolePrinter = () => {
       } catch {}
     }
 
-    // timeout after maxAttempts
     addLog("received", "Timeout — no response received");
   };
 

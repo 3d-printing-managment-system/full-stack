@@ -96,7 +96,7 @@ export function PrinterCard({ isSkeleton, printer }: PrinterCardProps) {
           className="p-2 border-2 rounded-md hover:bg-gray-500 hover:cursor-pointer"
           onClick={() =>
             navigate(`/home/printers/${printer?.id}/general`, {
-              state: printer,
+              state: printer?.id,
             })
           }
         >

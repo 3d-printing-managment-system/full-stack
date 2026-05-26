@@ -6,11 +6,13 @@ import { Printer, statusStyles } from "@/lib/types";
 import { formatSecondsToDurationBetter } from "@/lib/utils";
 import axios from "axios";
 import { Pause, Play, XCircle } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import { toast } from "sonner";
 
 function PrinterGeneralInfo() {
-  const printer = useOutletContext<Printer>();
+  const { id: printerId } = useOutletContext<Printer>();
+  const [printer, setPrinter] = useState<Printer | null>(null);
   const [nozzleTemp, setNozzleTemp] = useState(printer?.nozzleTemp ?? 200);
   const [loadingNozzle, setLoadingNozzle] = useState(false);
   const [loadingBed, setLoadingBed] = useState(false);
@@ -22,20 +24,21 @@ function PrinterGeneralInfo() {
     refreshPrinters,
     existingTags,
   } = useProfiles();
+
+  const fetchPrinter = async () => {
+    const res = await axios.get(
+      `http://localhost:3000/api/printers/${printerId}`,
+    );
+    setPrinter(res.data);
+  };
+
+  useEffect(() => {
+    fetchPrinter();
+    const interval = setInterval(fetchPrinter, 3000);
+    return () => clearInterval(interval);
+  }, [printerId]);
   const tagMap = Object.fromEntries(existingTags.map((t) => [t.id, t]));
   console.log("this is the map", tagMap);
-
-  // const currentJob =
-  //   printer?.jobs?.find(
-  //     (job) => job.status === "PRINTING" || job.status === "PAUSED",
-  //   ) ?? null;
-  // console.log("this is the current job", currentJob);
-  // const hasJob = currentJob !== null;
-  // const canControl =
-  //   currentJob?.status === "PRINTING" || currentJob?.status === "PAUSED";
-
-  // const isPrinting = currentJob?.status === "PRINTING";
-  // const isPaused = currentJob?.status === "PAUSED";
 
   const currentJob =
     printer?.jobs?.find(
@@ -44,30 +47,35 @@ function PrinterGeneralInfo() {
         job.status === "PAUSED" ||
         job.status === "DISPATCHED" ||
         (job.status === "QUEUED" &&
-          job.printerSelectionMode === "SPECIFIC_PRINTER"), 
+          job.printerSelectionMode === "SPECIFIC_PRINTER"),
     ) ?? null;
-
   const hasJob = currentJob !== null;
   const isQueued = currentJob?.status === "QUEUED";
   const isDispatched = currentJob?.status === "DISPATCHED";
   const isPrinting = currentJob?.status === "PRINTING";
   const isPaused = currentJob?.status === "PAUSED";
   const canControl = isPrinting || isPaused;
-  // const canCancel = hasJob && !isQueued; // or allow cancel on queued too — your call
-
   const duration = formatSecondsToDurationBetter(
     currentJob?.estimatedTime ?? 0,
   );
-
   const progress = currentJob?.progress ?? 0;
+
   const handleSetNozzleTemp = async (temp: number) => {
     setLoadingNozzle(true);
+
     try {
       await axios.post("http://localhost:3000/api/gcode-commands/send-raw", {
-        printerId: printer.id,
+        printerId: printer?.id,
         gcode: `M104 S${temp}`,
       });
+
+      toast.success(
+        `Nozzle temperature set to ${temp}°C, wait for command to execute`,
+      );
+
       await refreshPrinters();
+    } catch (error) {
+      toast.error("Failed to send nozzle temperature command");
     } finally {
       setLoadingNozzle(false);
     }
@@ -75,12 +83,20 @@ function PrinterGeneralInfo() {
 
   const handleSetBedTemp = async (temp: number) => {
     setLoadingBed(true);
+
     try {
       await axios.post("http://localhost:3000/api/gcode-commands/send-raw", {
-        printerId: printer.id,
+        printerId: printer?.id,
         gcode: `M140 S${temp}`,
       });
+
+      toast.success(
+        `Bed temperature set to ${temp}°C, wait for command to execute`,
+      );
+
       await refreshPrinters();
+    } catch (error) {
+      toast.error("Failed to send bed temperature command");
     } finally {
       setLoadingBed(false);
     }
@@ -96,7 +112,7 @@ function PrinterGeneralInfo() {
             {printer?.name ?? "Printer"}
           </h1>
           <div className="flex flex-wrap gap-2 items-center">
-            {printer.tags.map((item) => (
+            {printer?.tags.map((item) => (
               <Badge
                 key={item.tagId}
                 variant="secondary"
@@ -116,79 +132,6 @@ function PrinterGeneralInfo() {
         </Badge>
       </div>
 
-      {/* MAIN CARD */}
-      {/* <div className="bg-white border border-gray-100 rounded-xl p-8 shadow-sm">
-        <div className="flex justify-between items-end mb-4">
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Currently printing:</p>
-
-            <h2 className="text-lg font-semibold text-gray-700">
-              {currentJob?.part?.title ?? "Idle - No active job"}
-            </h2>
-          </div>
-
-          <span
-            className={`text-4xl font-black ${canControl ? "text-blue-60" : "text-gray-40"}`}
-          >
-            {progress}%
-          </span>
-        </div>
-
-        <div className="w-full h-8 bg-gray-100 rounded-lg overflow-hidden mb-8">
-          <div
-            className="h-full bg-blue-500 transition-all duration-500 ease-in-out"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        <div className="flex justify-center gap-4">
-          <button
-            disabled={!canControl}
-            onClick={() => {
-              if (!currentJob) return;
-
-              if (isPrinting) {
-                handlePauseJob(currentJob.id);
-              } else if (isPaused) {
-                handleResumeJob(currentJob.id);
-              }
-            }}
-            className={`flex items-center gap-2 px-10 py-3 rounded-full font-bold transition ${
-              canControl
-                ? "bg-blue-100 text-blue-700 hover:bg-blue-200 cursor-pointer"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
-            }`}
-          >
-            {isPrinting ? (
-              <>
-                <Pause size={18} />
-                Pause
-              </>
-            ) : (
-              <>
-                <Play size={18} />
-                Resume
-              </>
-            )}
-          </button>
-
-          <button
-            onClick={() =>
-              currentJob?.status !== "CANCELLED" &&
-              handleCancelJob(currentJob?.id)
-            }
-            disabled={!hasJob}
-            className={`flex items-center gap-2 px-10 py-3 rounded-full font-bold transition ${
-              hasJob
-                ? "bg-red-100 text-red-600 hover:bg-red-200 cursor-pointer"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
-            }`}
-          >
-            <XCircle size={18} />
-            Cancel
-          </button>
-        </div>
-      </div> */}
       {/* MAIN CARD */}
       <div className="bg-white border border-gray-100 rounded-xl p-8 shadow-sm">
         <div className="flex justify-between items-end mb-4">
