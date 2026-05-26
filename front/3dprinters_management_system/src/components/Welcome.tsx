@@ -85,14 +85,14 @@ export function WelcomeModal({
           <Bookmark className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
           <div>
             <p className="text-xs font-medium text-blue-700 mb-1">
-              Tip: Bookmark FlowQ
+              Tip: Bookmark NovaForma
             </p>
             <p className="text-xs text-blue-600">
               Press{" "}
               <kbd className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-xs">
                 Ctrl+D
               </kbd>{" "}
-              to bookmark FlowQ in your browser.
+              to bookmark NovaForma in your browser.
             </p>
           </div>
         </div>

@@ -36,6 +36,8 @@ interface ProfilesContextType {
     React.SetStateAction<InventoryItemBeforeJoining[]>
   >;
   inventory: InventoryItemBeforeJoining[];
+  isProcessing: boolean;
+  setIsProcessing: React.Dispatch<React.SetStateAction<boolean>>;
   addProfile: (profile: Profile) => void;
   deleteProfiles: (ids: string[]) => void;
   deleteInventoryItems: (id: string[]) => void;
@@ -68,6 +70,7 @@ const ProfilesContext = createContext<ProfilesContextType | undefined>(
 export const ProfilesProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const [isProcessing, setIsProcessing] = useState(false);
   const [setupCompleted, setSetupCompleted] = useState<
     Record<StepKey, boolean>
   >({
@@ -343,6 +346,8 @@ export const ProfilesProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <ProfilesContext.Provider
       value={{
+        isProcessing,
+        setIsProcessing,
         handleCancelJob,
         handleResumeJob,
         handlePauseJob,

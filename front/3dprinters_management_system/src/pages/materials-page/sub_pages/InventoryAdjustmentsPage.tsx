@@ -219,6 +219,8 @@ function InventoryAdjustmentsPage() {
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
           getRowId={(row) => row.orderNumber}
+          searchColumn="title"
+          searchPlaceholder="Search by Filament Profile..."
         >
           <DeleteButton onDelete={handleDelete}>
             <Button

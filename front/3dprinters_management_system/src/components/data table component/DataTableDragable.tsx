@@ -63,6 +63,8 @@ import { formatSecondsToDuration } from "@/lib/utils";
 import axios from "axios";
 import { useProfiles } from "@/context/ProfilesContext";
 import { Separator } from "../ui/separator";
+import { toast } from "sonner";
+import QueueInfoModal from "../QueueInfoModel";
 
 export function DataTableDragable({
   data: initialData,
@@ -70,8 +72,8 @@ export function DataTableDragable({
   data: QueueFile[];
 }) {
   const [data, setData] = React.useState<QueueFile[]>([]);
-  const { handleCancelJob, printers } = useProfiles();
-
+  const { handleCancelJob, printers, isProcessing, setIsProcessing } =
+    useProfiles();
   const printerMap = Object.fromEntries(
     printers.map((printer) => [printer.id, printer]),
   );
@@ -230,6 +232,7 @@ export function DataTableDragable({
       cell: ({ row }) => {
         const colors: Record<QueueFile["status"], string> = {
           QUEUED: "bg-blue-100 text-blue-700",
+          DISPATCHED: "bg-purple-100 text-purple-700",
           PRINTING: "bg-yellow-100 text-yellow-700",
           PAUSED: "bg-orange-100 text-orange-700",
           DONE: "bg-green-100 text-green-700",
@@ -363,10 +366,23 @@ export function DataTableDragable({
       const response = await axios.post(
         "http://localhost:3000/api/queue/start",
       );
-
+      setIsProcessing(true);
+      toast.success("Queue processing started successfully");
       console.log(response.data);
     } catch (error) {
       console.error("Failed to start processing:", error);
+      toast.error("Failed to start queue processing");
+    }
+  };
+
+  const handleStopProcessing = async () => {
+    try {
+      await axios.post("http://localhost:3000/api/queue/stop");
+      setIsProcessing(false);
+      toast.success("Queue processing stopped");
+    } catch (error) {
+      console.error("Failed to stop processing:", error);
+      toast.error("Failed to stop queue processing");
     }
   };
 
@@ -377,7 +393,7 @@ export function DataTableDragable({
           <div className="flex items-center gap-4">
             <Input
               type="text"
-              placeholder="Filter filament profiles..."
+              placeholder="Search by file name / printer..."
               className="max-w-sm"
             />
             <FilterButtons
@@ -395,6 +411,7 @@ export function DataTableDragable({
           </div>
 
           <div className="flex items-center gap-2">
+            <QueueInfoModal />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="">
@@ -428,9 +445,37 @@ export function DataTableDragable({
                   })}
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button className="" onClick={handleStartProcessing}>
-              Start Processing
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* Stop button */}
+              <Button
+                variant="outline"
+                disabled={!isProcessing}
+                onClick={handleStopProcessing}
+                className={`cursor-pointer transition ${
+                  isProcessing
+                    ? "border-red-400 text-red-500 hover:bg-red-50"
+                    : "opacity-50 cursor-not-allowed"
+                }`}
+              >
+                Stop Processing
+              </Button>
+
+              {/* Start button */}
+              <Button
+                className="cursor-pointer min-w-[160px]"
+                disabled={isProcessing}
+                onClick={handleStartProcessing}
+              >
+                {isProcessing ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-white animate-pulse" />
+                    Processing...
+                  </div>
+                ) : (
+                  "Start Processing"
+                )}
+              </Button>
+            </div>
           </div>
         </div>
         <div className="overflow-hidden rounded-lg border">

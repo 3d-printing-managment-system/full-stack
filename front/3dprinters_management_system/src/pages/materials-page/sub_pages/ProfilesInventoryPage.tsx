@@ -203,6 +203,8 @@ function ProfilesInventoryPage() {
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
           getRowId={(row) => row.id}
+          searchColumn="title"
+          searchPlaceholder="Search by Filament Profile..."
         >
           <DeleteButton onDelete={handleDelete}>
             <Button

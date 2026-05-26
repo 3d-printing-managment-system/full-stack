@@ -45,6 +45,8 @@ interface DataTableProps<TData, TValue> {
     React.SetStateAction<Record<string, boolean>>
   >;
   getRowId?: (row: TData) => string;
+  searchColumn?: string;
+  searchPlaceholder?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -54,6 +56,8 @@ export function DataTable<TData, TValue>({
   getRowId,
   rowSelection,
   onRowSelectionChange,
+  searchColumn,
+  searchPlaceholder,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -94,17 +98,18 @@ export function DataTable<TData, TValue>({
         <div className="flex gap-2">
           <Input
             type="text"
-            placeholder="Filter filament profiles..."
-            // value={
-            //   (table
-            //     .getColumn("filament_profile")
-            //     ?.getFilterValue() as string) ?? ""
-            // }
-            // onChange={(event) =>
-            //   table
-            //     .getColumn("filament_profile")
-            //     ?.setFilterValue(event.target.value)
-            // }
+            placeholder={searchPlaceholder}
+            value={
+              searchColumn
+                ? ((table
+                    .getColumn(searchColumn)
+                    ?.getFilterValue() as string) ?? "")
+                : ""
+            }
+            onChange={(event) =>
+              searchColumn &&
+              table.getColumn(searchColumn)?.setFilterValue(event.target.value)
+            }
             className="max-w-sm"
           />
           <DropdownMenu>

@@ -188,6 +188,8 @@ function FilesPage() {
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
           getRowId={(row) => row.id}
+          searchColumn="title"
+          searchPlaceholder="Search by file name..."
         >
           <DeleteButton onDelete={handleDelete}>
             <Button

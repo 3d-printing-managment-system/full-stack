@@ -8,7 +8,10 @@ export function TabsLine({
   if (!paths) return null;
   const location = useLocation();
   return (
-    <Tabs className="mb-6" value={location.pathname}>
+    <Tabs
+      className="mb-6 border-b-2  border-gray-200"
+      value={location.pathname}
+    >
       <TabsList variant="line" className="">
         {paths.map((item) => {
           return (
