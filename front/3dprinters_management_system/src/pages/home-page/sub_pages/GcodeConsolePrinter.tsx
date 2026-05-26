@@ -1,4 +1,3 @@
-// export default GcodeConsolePrinter;
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
@@ -38,20 +37,50 @@ type Log = {
 
 const GcodeConsolePrinter = () => {
   const printer = useOutletContext<Printer>();
+  console.log(printer);
   const { commands, refreshCommands } = useProfiles();
   const [isWaiting, setIsWaiting] = useState(false);
   const [command, setCommand] = useState("");
   const [templateMode, setTemplateMode] = useState(false);
   const [stepSize, setStepSize] = useState("10");
-  const [logs, setLogs] = useState<Log[]>([
-    { type: "sent", msg: "G28", time: "12:40:01" },
-    { type: "received", msg: "ok", time: "12:40:03" },
-    {
-      type: "received",
-      msg: "X:0.00 Y:0.00 Z:0.00 E:0.00 Count X:0 Y:0 Z:0",
-      time: "12:40:03",
-    },
-  ]);
+  const [logs, setLogs] = useState<Log[]>([]);
+
+  const loadRecentLogs = async () => {
+    try {
+      const { data } = await axios.get(
+        `http://localhost:3000/api/command-logs/printer/${printer.id}?limit=5`,
+      );
+
+      const formattedLogs: Log[] = data.flatMap((log: any) => {
+        const entries: Log[] = [
+          {
+            type: "sent",
+            msg: log.rawCommand,
+            time: new Date(log.createdAt).toLocaleTimeString(),
+          },
+        ];
+
+        entries.push({
+          type: "received",
+          msg: log.response
+            ? `status: ${log.status}, response: ${log.response}`
+            : "Timeout — no response received",
+          time: new Date(log.updatedAt ?? log.createdAt).toLocaleTimeString(),
+        });
+        return entries;
+      });
+
+      setLogs(formattedLogs);
+    } catch (error) {
+      console.error("Failed to load logs", error);
+    }
+  };
+
+  useEffect(() => {
+    if (printer?.id) {
+      loadRecentLogs();
+    }
+  }, [printer?.id]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -76,7 +105,7 @@ const GcodeConsolePrinter = () => {
 
   const pollForResponse = async (printerId: string) => {
     const maxAttempts = 20;
-    const interval = 500; // check every 500ms
+    const interval = 1000; // check every 500ms
 
     for (let i = 0; i < maxAttempts; i++) {
       await new Promise((res) => setTimeout(res, interval));
@@ -86,18 +115,17 @@ const GcodeConsolePrinter = () => {
           `http://localhost:3000/api/command-logs/printer/${printerId}/last`,
         );
         console.log("the last", data);
+        console.log("checking", data.updatedAt > data.createdAt);
 
         // check if updatedAt is newer than when we sent
-        if (data.updatedAt !== null) {
+        if (new Date(data.updatedAt) > new Date(data.createdAt)) {
           addLog(
             "received",
             `status: ${data.status}, response: ${data.response ? data.response : "no response yet"}`,
           );
           return;
         }
-      } catch {
-        // keep polling
-      }
+      } catch {}
     }
 
     // timeout after maxAttempts
@@ -165,17 +193,10 @@ const GcodeConsolePrinter = () => {
       (cmd) =>
         cmd.command.trim().toUpperCase() === command.trim().toUpperCase(),
     );
-    // console.log(
-    //   "this si the matched command",
-    //   matchedCommand,
-    //   "its id : ",
-    //   matchedCommand?.id,
-    // );
 
     // If found → use its id
     // If not → commandId = null
     try {
-      // console.log("here is the printer", printer, "ans its id", printer?.id);
       // Actually send to printer
       if (matchedCommand) {
         await axios.post(

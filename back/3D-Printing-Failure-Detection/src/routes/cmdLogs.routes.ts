@@ -5,6 +5,7 @@ const router = Router({ mergeParams: true });
 
 router.post("/", ctrl.createCommandLog);
 router.get("/", ctrl.getCommandLogs);
+router.get("/printer/:printerId", ctrl.getRecentCommandLogsByPrinter);
 router.delete("/", ctrl.deleteManyCommandLogs);
 router.get("/printer/:printerId/last", ctrl.getLastCommandLogByPrinter);
 router.get("/:id", ctrl.getCommandLogById);

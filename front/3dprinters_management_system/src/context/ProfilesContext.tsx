@@ -151,23 +151,6 @@ export const ProfilesProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // const refreshJobs = async () => {
-  //   try {
-  //     const res = await axios.get("http://localhost:3000/api/print-jobs");
-  //     setQueueFile(res.data);
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
-  // };
-
-  // const refreshPrinters = async () => {
-  //   try {
-  //     const res = await axios.get("http://localhost:3000/api/printers");
-  //     setPrinters(res.data);
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
-  // };
   const refreshJobs = useCallback(async () => {
     try {
       const res = await axios.get("http://localhost:3000/api/print-jobs");
@@ -245,18 +228,6 @@ export const ProfilesProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const [queuefile, setQueueFile] = useState<QueueFile[]>([]);
-  // const fetchQueueFiles = async () => {
-  //   try {
-  //     const res = await axios.get("http://localhost:3000/api/print-jobs");
-  //     setQueueFile(res.data);
-  //   } catch (err) {
-  //     console.error("Error fetching profiles:", err);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   fetchQueueFiles();
-  // }, []);
 
   const [existingTags, setExistingTags] = useState<Tags[]>([]);
 
@@ -283,19 +254,6 @@ export const ProfilesProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const [printers, setPrinters] = useState<Printer[]>([]);
-
-  // const fetchPrinters = async () => {
-  //   try {
-  //     const res = await axios.get("http://localhost:3000/api/printers");
-  //     setPrinters(res.data);
-  //   } catch (err) {
-  //     console.error("Error fetching printers:", err);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   fetchPrinters();
-  // }, []);
 
   const addProfile = (profile: Profile) =>
     setProfiles((prev) => [...prev, profile]);

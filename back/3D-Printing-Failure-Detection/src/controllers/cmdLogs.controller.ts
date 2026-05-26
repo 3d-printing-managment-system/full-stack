@@ -110,3 +110,20 @@ export const getLastCommandLogByPrinter: RequestHandler<PrinterParam> = async (
     handleError(res, error);
   }
 };
+
+export const getRecentCommandLogsByPrinter: RequestHandler<
+  PrinterParam
+> = async (req, res) => {
+  try {
+    const limit = Number(req.query.limit) || 5;
+
+    const data = await service.getRecentCommandLogsByPrinter(
+      req.params.printerId,
+      limit,
+    );
+
+    res.json(data);
+  } catch (error) {
+    handleError(res, error);
+  }
+};

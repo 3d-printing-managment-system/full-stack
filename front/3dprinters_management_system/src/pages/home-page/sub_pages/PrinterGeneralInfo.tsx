@@ -44,7 +44,7 @@ function PrinterGeneralInfo() {
         job.status === "PAUSED" ||
         job.status === "DISPATCHED" ||
         (job.status === "QUEUED" &&
-          job.printerSelectionMode === "SPECIFIC_PRINTER"), // 👈 only QUEUED for specific printer
+          job.printerSelectionMode === "SPECIFIC_PRINTER"), 
     ) ?? null;
 
   const hasJob = currentJob !== null;

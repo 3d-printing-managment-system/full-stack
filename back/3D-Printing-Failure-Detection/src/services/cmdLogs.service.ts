@@ -90,3 +90,20 @@ export const getLastCommandLogByPrinter = async (printerId: string) => {
     include: { printer: true, gcodeCommand: true },
   });
 };
+
+export const getRecentCommandLogsByPrinter = async (
+  printerId: string,
+  limit: number,
+) => {
+  return prisma.commandLog.findMany({
+    where: { printerId },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: limit,
+    include: {
+      printer: true,
+      gcodeCommand: true,
+    },
+  });
+};
