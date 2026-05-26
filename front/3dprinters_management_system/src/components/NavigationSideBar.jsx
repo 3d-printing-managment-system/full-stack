@@ -97,7 +97,7 @@ function NavigationSideBar() {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
-        <SidebarContent>
+        <SidebarContent className="flex flex-col justify-between">
           <SidebarGroup>
             <SidebarMenu>
               {data.navMain.map((item) => (

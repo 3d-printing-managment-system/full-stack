@@ -11,6 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { Printer, statusStyles } from "@/lib/types";
 import axios from "axios";
 import { useProfiles } from "@/context/ProfilesContext";
+import { useEffect, useState } from "react";
+import CardPrinterCamera from "./CardPrinterCamera";
 
 interface PrinterCardProps {
   printer: Printer | null;
@@ -20,7 +22,7 @@ interface PrinterCardProps {
 export function PrinterCard({ isSkeleton, printer }: PrinterCardProps) {
   const navigate = useNavigate();
   const { handleResumeJob, handlePauseJob } = useProfiles();
-  // console.log("here is ou tprinter", printer);
+
   const activeJob = printer?.jobs.find(
     (job) => job.status === "PRINTING" || job.status === "PAUSED",
   );
@@ -105,17 +107,7 @@ export function PrinterCard({ isSkeleton, printer }: PrinterCardProps) {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
-        <div className="w-full aspect-[16/12] bg-gray-100 rounded-xl overflow-hidden relative">
-          <img
-            src={image}
-            alt="printer"
-            className="w-full h-full object-cover"
-          />
-
-          <button className="absolute bottom-2 left-2 p-2 bg-white rounded-md shadow-md hover:bg-gray-100">
-            <Camera className="h-3 w-3 text-gray-700" />
-          </button>
-        </div>
+        <CardPrinterCamera path={printer?.cameraLink} />
 
         {/* Job title */}
         <h3 className="font-semibold text-sm">

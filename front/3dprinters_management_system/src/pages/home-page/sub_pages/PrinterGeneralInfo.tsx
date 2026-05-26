@@ -1,5 +1,6 @@
 "use client";
 
+import { GeneralPrinterCamera } from "@/components/GeneralPrinterCamera";
 import { Badge } from "@/components/ui/badge";
 import { useProfiles } from "@/context/ProfilesContext";
 import { Printer, statusStyles } from "@/lib/types";
@@ -17,6 +18,7 @@ function PrinterGeneralInfo() {
   const [loadingNozzle, setLoadingNozzle] = useState(false);
   const [loadingBed, setLoadingBed] = useState(false);
   const [bedTemp, setBedTemp] = useState(printer?.bedTemp ?? 60);
+
   const {
     handleCancelJob,
     handlePauseJob,
@@ -315,18 +317,7 @@ function PrinterGeneralInfo() {
           </div>
 
           {/* CAMERA */}
-          <div className="relative bg-black">
-            <img
-              src="https://your-camera-stream-url.com/live"
-              alt="Printer Live Feed"
-              className="w-full h-full object-cover opacity-90"
-            />
-
-            <div className="absolute top-4 right-4 bg-red-600 text-white px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1">
-              <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-              LIVE
-            </div>
-          </div>
+          <GeneralPrinterCamera path={printer?.cameraLink} />
         </div>
       </div>
     </div>
