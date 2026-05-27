@@ -16,7 +16,10 @@ export function AddPrinter({ className }: AddPrinterProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="default" className={`bg-blue-500 ${className}`}>
+        <Button
+          variant="default"
+          className={`bg-blue-500 ${className} cursor-pointer`}
+        >
           Add Printer
         </Button>
       </DialogTrigger>
@@ -46,9 +49,12 @@ export function AddPrinter({ className }: AddPrinterProps) {
             detected by the system.
           </p>
         </div>
-        <DialogFooter className="sm:justify-end p-0">
+        <DialogFooter className="sm:justify-end ">
           <DialogClose asChild>
-            <Button type="button" className="bg-blue-500 min-w-[150px]">
+            <Button
+              type="button"
+              className="bg-blue-500 min-w-[150px] cursor-pointer"
+            >
               Okey
             </Button>
           </DialogClose>

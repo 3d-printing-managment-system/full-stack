@@ -188,7 +188,7 @@ function FormProfiles({ profile }: FormProfilesProps) {
                   <FieldLabel htmlFor="form-rhf-demo-title" className="">
                     Role Size
                   </FieldLabel>
-                  <div className="flex items-center border  overflow-hidden">
+                  <div className="flex items-center border  overflow-hidden rounded-md">
                     <input
                       type="text"
                       value={
@@ -201,7 +201,7 @@ function FormProfiles({ profile }: FormProfilesProps) {
                           field.onChange(raw === "" ? "" : Number(raw));
                         }
                       }}
-                      className="flex-1 px-3 outline-none"
+                      className="flex-1 px-3 outline-none "
                       placeholder="0kg"
                     />
 

@@ -175,7 +175,7 @@ function FormInventory({ inventoryItem }: FormInventoryProps) {
     typeof v === "number" && !Number.isNaN(v) ? v : 0;
 
   return (
-    <Card className="w-full sm:max-w-md overflow-visible">
+    <Card className="w-full sm:max-w-xl overflow-visible">
       <CardHeader className="pb-6 items-center justify-between flex">
         <div>
           {inventoryItem ? "Edit This Inventory Item" : "Update Filament Stock"}
@@ -200,15 +200,15 @@ function FormInventory({ inventoryItem }: FormInventoryProps) {
         </div>
       </CardHeader>
       <CardContent className="">
-        <div>
-          <CardTitle className="">Update Details</CardTitle>
-          <CardDescription className="pb-4">
-            manage your filament usage and restocking.
-          </CardDescription>
-        </div>
-
         <form id="form-rhf-demo2" onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup className="">
+            <div>
+              <CardTitle className=""> Profile & Type</CardTitle>
+              <CardDescription className="pb-2">
+                Select the filament profile and the type of update
+              </CardDescription>
+            </div>
+
             <Controller
               name="profileId"
               control={form.control}
@@ -328,16 +328,25 @@ function FormInventory({ inventoryItem }: FormInventoryProps) {
                 </Field>
               )}
             />
-            <div className="flex gap-2">
+            <Separator className="mt-4" />
+            <div>
+              <CardTitle className="">Quantity & Cost</CardTitle>
+              <CardDescription className="pb-2">
+                {updateType === "ORDER"
+                  ? "Enter the amount received and the total cost"
+                  : "Enter the amount of filament used"}
+              </CardDescription>
+            </div>
+            <div className="flex gap-2 w-full">
               {updateType === "ORDER" && (
                 <Controller
                   name="totalCost"
                   control={form.control}
                   render={({ field, fieldState }) => (
-                    <Field className="">
+                    <Field className="flex-1">
                       <FieldLabel className="">Total Price ($)</FieldLabel>
 
-                      <div className="flex items-center border overflow-hidden">
+                      <div className="flex items-center border rounded-md">
                         <input
                           type="text"
                           value={`${toNumber(field.value)}$`}
@@ -392,13 +401,13 @@ function FormInventory({ inventoryItem }: FormInventoryProps) {
                 name="quantity"
                 control={form.control}
                 render={({ field, fieldState }) => (
-                  <Field className="">
+                  <Field className="flex-1">
                     <FieldLabel htmlFor="form-rhf-demo2-title" className="">
                       {updateType === "ORDER"
                         ? "Quantity Received (kg)"
                         : "Quantity Used (kg)"}
                     </FieldLabel>
-                    <div className="flex items-center border  overflow-hidden">
+                    <div className="flex items-center border rounded-md">
                       <input
                         type="text"
                         value={

@@ -129,14 +129,21 @@ function NavigationSideBar() {
               {data.navSecondary.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   {item.path ? (
-                    <SidebarMenuButton asChild onClick={() => setOpen(true)}>
+                    <SidebarMenuButton
+                      asChild
+                      onClick={() => setOpen(true)}
+                      className="cursor-pointer"
+                    >
                       <NavLink to={item.path} end={item.path === "/"}>
                         <item.icon />
                         <span>{item.title}</span>
                       </NavLink>
                     </SidebarMenuButton>
                   ) : (
-                    <SidebarMenuButton onClick={() => setOpen(true)}>
+                    <SidebarMenuButton
+                      onClick={() => setOpen(true)}
+                      className="cursor-pointer"
+                    >
                       <item.icon />
                       <span>{item.title}</span>
                     </SidebarMenuButton>
