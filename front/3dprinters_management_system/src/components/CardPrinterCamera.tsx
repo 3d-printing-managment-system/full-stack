@@ -21,7 +21,8 @@ function CardPrinterCamera({ path }: PrinterCameraProps) {
     <div className="w-full aspect-[16/12] bg-gray-100 rounded-xl overflow-hidden relative">
       {cameraOn ? (
         <img
-          src={`${path}/shot.jpg?t=${tick}`}
+          // src={`${path}/shot.jpg?t=${tick}`}
+                 src={`${path}/video`}
           alt="live feed"
           className="w-full h-full object-cover"
           onError={() => {

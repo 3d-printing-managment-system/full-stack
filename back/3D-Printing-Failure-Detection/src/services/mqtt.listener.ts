@@ -108,16 +108,39 @@ client.on("message", async (topic, message) => {
       const rawStatus = (data.status ?? "").toUpperCase();
   const mappedStatus = statusMap[rawStatus];
 
+
   // ✅ unknown status → skip entirely, never touch the job
   if (!mappedStatus) {
     console.warn(`⚠️ Unknown job status received: "${data.status}" for job ${data.jobId} — ignored`);
     return;
   }
 
+  const convertTimeToMinutes = (time?: string) => {
+  if (!time) return undefined;
+
+  let hours = 0;
+  let minutes = 0;
+
+  // match patterns like "1h:30m"
+  const hourMatch = time.match(/(\d+)\s*h/);
+  const minuteMatch = time.match(/(\d+)\s*m/);
+
+  if (hourMatch) {
+    hours = parseInt(hourMatch[1], 10);
+  }
+
+  if (minuteMatch) {
+    minutes = parseInt(minuteMatch[1], 10);
+  }
+
+  return hours * 60 + minutes;
+};
+
       await prisma.printJob.update({
         where: { id: data.jobId },
         data: {
           status: mappedStatus,
+          estimatedTime: convertTimeToMinutes(data.estimatedTime),
           progress:data.progress,
           startedAt: data.startedAt
             ? new Date(data.startedAt)
